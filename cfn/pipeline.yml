@@ -1,0 +1,219 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: "Deploys a data bucket and config bucket to S3"
+Parameters:
+  AppName:
+    Type: String
+  AppVersion:
+    Type: String
+  Stage:
+    Type: String
+Resources:
+  DataBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join 
+        - '-'
+        - - !Ref Stage
+          - !Ref AppName
+          - !Ref AppVersion
+          - !Ref AWS::Region
+          - 'reddit-data'
+  ConfigBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join 
+        - '-'
+        - - !Ref Stage
+          - !Ref AppName
+          - !Ref AppVersion
+          - !Ref AWS::Region
+          - 'config'
+  ConfigBucketPolicy: 
+    Type: AWS::S3::BucketPolicy
+    Properties: 
+      Bucket: !Ref ConfigBucket
+      PolicyDocument: 
+        Version: '2012-10-17'
+        Statement:
+          - Action: 
+              - s3:GetObject
+            Effect: Allow
+            Resource: !Sub '${ConfigBucket.Arn}/*'
+            Principal:
+              Service: 'lambda.amazonaws.com'
+          - Action: 
+              - s3:ListBucket # Must be listed separately in bucket policies
+            Effect: Allow
+            Resource: !Sub '${ConfigBucket.Arn}'
+            Principal:
+              Service: 'lambda.amazonaws.com'
+  KinesisFirehoseDeliveryStream:
+    Type: AWS::KinesisFirehose::DeliveryStream
+    Properties:
+      DeliveryStreamName: !Join
+        - '-'
+        - - !Ref Stage
+          - !Ref AppName
+          - !Ref AppVersion
+          - !Ref AWS::Region
+          - 'subreddits-delivery-stream'
+      DeliveryStreamType: DirectPut
+      ExtendedS3DestinationConfiguration:
+        BucketARN: !GetAtt DataBucket.Arn
+        BufferingHints: 
+            IntervalInSeconds: 300
+            SizeInMBs: 5
+        Prefix: data/raw_reddit_posts_json/
+        ErrorOutputPrefix: data/raw_reddit_posts_json_error/
+        RoleARN: !GetAtt KinesisFirehoseDeliveryRole.Arn
+  KinesisFirehoseDeliveryRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Join
+        - '-'
+        - - !Ref Stage
+          - !Ref AppName
+          - !Ref AppVersion
+          - !Ref AWS::Region
+          - firehose-s3-role
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: ""
+            Effect: Allow
+            Principal:
+              Service: firehose.amazonaws.com
+            Action: "sts:AssumeRole"
+            Condition:
+              StringEquals:
+                "sts:ExternalId": !Ref "AWS::AccountId"
+  KinesisFirehoseDeliveryPolicy:
+    Type: AWS::IAM::Policy
+    Properties:
+      PolicyName: !Join
+        - '-'
+        - - !Ref Stage
+          - !Ref AppName
+          - !Ref AppVersion
+          - !Ref AWS::Region
+          - firehose-s3-policy
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Action:
+              - "s3:AbortMultipartUpload"
+              - "s3:GetBucketLocation"
+              - "s3:GetObject"
+              - "s3:ListBucket"
+              - "s3:ListBucketMultipartUploads"
+              - "s3:PutObject"
+            Resource: 
+              - !GetAtt DataBucket.Arn
+              - !Join
+                - ""
+                - - !GetAtt DataBucket.Arn
+                  - "/*" 
+          - Effect: Allow
+            Action:
+              - "glue:GetTable"
+              - "glue:GetTableVersion"
+              - "glue:GetTableVersions"
+            Resource: "*"
+      Roles:
+        - !Ref KinesisFirehoseDeliveryRole
+  CollectSubredditsQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join 
+        - '-'
+        - - !Ref Stage
+          - !Ref AppName
+          - !Ref AppVersion
+          - !Ref AWS::Region
+          - subreddits-queue
+      VisibilityTimeout: 1800
+      MessageRetentionPeriod: 3600
+      RedrivePolicy:
+        deadLetterTargetArn:
+          Fn::GetAtt:
+            - CollectSubredditsDeadLetterQueue
+            - Arn
+        maxReceiveCount: 5
+  CollectSubredditsDeadLetterQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Join 
+        - '-'
+        - - !Ref Stage
+          - !Ref AppName
+          - !Ref AppVersion
+          - !Ref AWS::Region
+          - subreddits-DL-queue 
+  CollectSubredditsQueuePolicy: 
+    Type: AWS::SQS::QueuePolicy
+    Properties: 
+      Queues: 
+        - !Ref CollectSubredditsQueue
+        - !Ref CollectSubredditsDeadLetterQueue
+      PolicyDocument: 
+        Statement: 
+          - Action: 
+              - "SQS:SendMessage" 
+              - "SQS:ReceiveMessage"
+            Effect: "Allow"
+            Resource: !GetAtt CollectSubredditsQueue.Arn
+            Principal:
+              AWS: 
+                - !Ref AWS::AccountId
+          - Action: 
+              - "SQS:SendMessage" 
+              - "SQS:ReceiveMessage"
+            Effect: "Allow"
+            Resource: !GetAtt CollectSubredditsDeadLetterQueue.Arn
+            Principal:  
+              AWS: 
+                - !Ref AWS::AccountId
+Outputs:
+  DataBucketName:
+    Description: "S3 Bucket for storing Reddit posts data"
+    Value: !Ref DataBucket
+    Export:
+      Name: !Join [ "-", [ !Ref "AWS::StackName", DataBucketName ] ]
+  DataBucketArn:
+    Description: "S3 Bucket Arn for storing Reddit posts data"
+    Value: !GetAtt DataBucket.Arn
+    Export:
+      Name: !Join [ "-", [ !Ref "AWS::StackName", DataBucketArn ] ]
+  ConfigBucketName:
+    Description: "S3 Bucket for storing config data"
+    Value: !Ref ConfigBucket
+    Export:
+      Name: !Join [ "-", [ !Ref "AWS::StackName", ConfigBucketName ] ]
+  ConfigBucketArn:
+    Description: "S3 Bucket Arn for storing config data"
+    Value: !GetAtt ConfigBucket.Arn
+    Export:
+      Name: !Join [ "-", [ !Ref "AWS::StackName", ConfigBucketArn ] ]
+  KinesisFirehoseDeliveryStreamName:
+    Description: Name of the Kinesis Firehose delivery stream
+    Value: !Ref KinesisFirehoseDeliveryStream
+    Export:
+      Name: !Sub "${AWS::StackName}-KinesisFirehoseDeliveryStreamName"
+  KinesisFirehoseDeliveryStreamArn:
+    Description: Arn of the Kinesis Firehose delivery stream
+    Value: !GetAtt KinesisFirehoseDeliveryStream.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-KinesisFirehoseDeliveryStreamArn"
+  CollectSubredditsQueueName:
+    Description: 'Name of SQS Queue'
+    Value: !GetAtt CollectSubredditsQueue.QueueName
+  CollectSubredditsQueueArn:
+    Description: 'Arn of SQS Queue'
+    Value: !GetAtt CollectSubredditsQueue.Arn
+  CollectSubredditsQueueURL:
+    Description: 'URL of SQS Queue'
+    Value: !Ref CollectSubredditsQueue
+  StackName:
+    Description: StackName
+    Value: !Sub ${AWS::StackName}

@@ -1,0 +1,175 @@
+# serverless invoke local -f collectData -p ../../../mocks/sqs-event.json
+app: reddit-pipeline
+service: lambda
+
+
+plugins:
+  - serverless-python-requirements
+
+package:
+  individually: true
+  
+custom:
+  appname: reddit-pipeline
+  version: 1
+  pythonRequirements:
+    dockerizePip: non-linux
+  cfn_stack: ${self:provider.stage}-${self:custom.appname}-${self:custom.version}-${self:provider.region} # aws cloudformation deploy --stack-name base parameter
+  deliverystream_name: ${cf:${self:custom.cfn_stack}.KinesisFirehoseDeliveryStreamName}
+  deliverystream_arn: ${cf:${self:custom.cfn_stack}.KinesisFirehoseDeliveryStreamArn}
+  databucket_name: ${cf:${self:custom.cfn_stack}.DataBucketName}
+  databucket_arn: ${cf:${self:custom.cfn_stack}.DataBucketArn}
+  configbucket_name: ${cf:${self:custom.cfn_stack}.ConfigBucketName}
+  configbucket_arn: ${cf:${self:custom.cfn_stack}.ConfigBucketArn}
+  collectsubredditsqueue_name: ${cf:${self:custom.cfn_stack}.CollectSubredditsQueueName}
+  collectsubredditsqueue_arn: ${cf:${self:custom.cfn_stack}.CollectSubredditsQueueArn}
+  config_subreddits: 'config/load-subreddits.json'
+  queuesubreddits_role: ${self:custom.cfn_stack}-lambda-queueSubreddits-role
+  collectdata_role: ${self:custom.cfn_stack}-lambda-collectData-role
+  ssm_key: ${self:provider.stage}-${self:custom.appname}/${self:custom.version}/${self:provider.region}
+  praw_cid: ${ssm:/${self:custom.ssm_key}/praw_cid~true}
+  praw_secret: ${ssm:/${self:custom.ssm_key}/praw_secret~true}
+  praw_password: ${ssm:/${self:custom.ssm_key}/praw_password~true}
+  praw_useragent: ${ssm:/${self:custom.ssm_key}/praw_useragent}
+  praw_username: ${ssm:/${self:custom.ssm_key}/praw_username~true}
+  praw_limit: 1000
+
+provider:
+  name: aws
+  runtime: python3.7
+  stackName: ${self:custom.cfn_stack}-${self:service.name}
+  stage: dev
+  region: us-east-1
+  deploymentBucket:
+    tags:
+      AppName: ${self:custom.appname}
+      AppVersion: ${self:custom.version}
+
+  environment:
+    PRAW_CID: ${self:custom.praw_cid}
+    PRAW_SECRET: ${self:custom.praw_secret}
+    PRAW_PASSWORD: ${self:custom.praw_password}
+    PRAW_USERAGENT: ${self:custom.praw_useragent}
+    PRAW_USERNAME: ${self:custom.praw_username}
+    PRAW_LIMIT: ${self:custom.praw_limit}
+    DELIVERY_STREAM: ${self:custom.deliverystream_name}
+    S3_CONFIG_BUCKET: ${self:custom.configbucket_name}
+    S3_LOAD_SUBREDDITS: ${self:custom.config_subreddits}
+    SQS_QUEUE: ${self:custom.collectsubredditsqueue_name}
+
+functions:
+  queueSubreddits:
+    name: ${self:provider.stackName}-queueSubreddits
+    handler: handler.queue_subreddits
+    role: queueSubredditsIAMRole
+    package:
+      include:
+          - libs/*
+    timeout: 60
+    memorySize: 128
+    events:
+      - schedule: rate(1 hour)
+  collectData:
+    name: ${self:provider.stackName}-collectData
+    handler: handler.collect_data
+    role: collectDataIAMRole
+    package:
+      include:
+          - libs/*
+    timeout: 60
+    memorySize: 1024
+    reservedConcurrency: 10
+    events:
+      - sqs: 
+          arn: ${self:custom.collectsubredditsqueue_arn}
+          batchSize: 1
+
+resources:
+  Resources:
+      queueSubredditsIAMRole:
+        Type: AWS::IAM::Role
+        Properties:
+          Path: /
+          RoleName: ${self:custom.queuesubreddits_role}
+          AssumeRolePolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Principal:
+                  Service:
+                    - lambda.amazonaws.com
+                Action: sts:AssumeRole
+          Policies:
+            - PolicyName: ${self:custom.cfn_stack}-queueSubreddits-policy
+              PolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                  - Effect: Allow # note that these rights are given in the default policy and are required if you want logs out of your lambda(s)
+                    Action:
+                      - logs:CreateLogGroup
+                      - logs:CreateLogStream
+                      - logs:PutLogEvents
+                    Resource: !Join
+                      - ':'
+                      - - 'arn:aws:logs'
+                        - !Ref AWS::Region
+                        - !Ref AWS::AccountId
+                        - 'log-group:/aws/lambda/*:*:*'
+                  - Effect: Allow
+                    Action:
+                      - sqs:ReceiveMessage
+                      - sqs:DeleteMessage
+                      - sqs:GetQueueAttributes
+                      - sqs:SendMessageBatch
+                      - sqs:SendMessage
+                      - sqs:GetQueueUrl
+                    Resource: ${self:custom.collectsubredditsqueue_arn}
+                  - Effect: Allow
+                    Action: 
+                      - s3:GetObject
+                      - s3:ListBucket
+                    Resource: 
+                      - ${self:custom.configbucket_arn}
+                      - ${self:custom.configbucket_arn}/*
+      collectDataIAMRole:
+        Type: AWS::IAM::Role
+        Properties:
+          Path: /
+          RoleName: ${self:custom.collectdata_role}
+          AssumeRolePolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Principal:
+                  Service:
+                    - lambda.amazonaws.com
+                Action: sts:AssumeRole
+          Policies:
+            - PolicyName: ${self:custom.cfn_stack}-collectData-policy
+              PolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                  - Effect: Allow # note that these rights are given in the default policy and are required if you want logs out of your lambda(s)
+                    Action:
+                      - logs:CreateLogGroup
+                      - logs:CreateLogStream
+                      - logs:PutLogEvents
+                    Resource: !Join
+                      - ':'
+                      - - 'arn:aws:logs'
+                        - !Ref AWS::Region
+                        - !Ref AWS::AccountId
+                        - 'log-group:/aws/lambda/*:*:*'
+                  - Effect: Allow
+                    Action:
+                      - sqs:ReceiveMessage
+                      - sqs:DeleteMessage
+                      - sqs:GetQueueAttributes
+                    Resource: ${self:custom.collectsubredditsqueue_arn}
+                  - Effect: Allow
+                    Action:
+                      - firehose:DeleteDeliveryStream
+                      - firehose:PutRecord
+                      - firehose:PutRecordBatch
+                      - firehose:UpdateDestination
+                    Resource: ${self:custom.deliverystream_arn}

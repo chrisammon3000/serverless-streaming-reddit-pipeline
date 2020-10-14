@@ -1,0 +1,133 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Reddit data mining service
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+  AppName:
+    Type: String
+    Default: 'reddit-pipeline'
+  AppVersion:
+    Type: String
+    Default: 1
+  DataPipelineCFN:
+    Description: 'Name of data pipeline cfn file'
+    Default: 'pipeline.yml'
+    Type: String
+  DataLakeCFN:
+    Description: 'Name of data lake cfn file'
+    Default: 'data-lake.yml'
+    Type: String
+Resources:
+  DataPipelineStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Join 
+        - '/'
+        - - !Sub 'https://s3.${AWS::Region}.amazonaws.com'
+          - Fn::ImportValue: 
+              !Sub '${Stage}-${AppName}-${AppVersion}-${AWS::Region}-s3-CFNBucketName' # templates bucket name
+          - !Sub '${AppName}/${Stage}/version_${AppVersion}/${DataPipelineCFN}' # object key
+      Parameters:
+        AppName: !Ref AppName
+        AppVersion: !Ref AppVersion
+        Stage: !Ref Stage
+      Tags: 
+        - Key: AppName
+          Value: !Ref AppName
+        - Key: AppVersion
+          Value: !Ref AppVersion
+        - Key: Stage
+          Value: !Ref Stage
+        - Key: Service
+          Value: data-pipeline
+  DataLakeStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Join 
+        - '/'
+        - - !Sub 'https://s3.${AWS::Region}.amazonaws.com'
+          - Fn::ImportValue: 
+              !Sub '${Stage}-${AppName}-${AppVersion}-${AWS::Region}-s3-CFNBucketName' # templates bucket name
+          - !Sub '${AppName}/${Stage}/version_${AppVersion}/${DataLakeCFN}' # object key
+      Parameters:
+        AppName: !Ref AppName
+        AppVersion: !Ref AppVersion
+        Stage: !Ref Stage
+        DataBucketName: 
+          Fn::GetAtt: 
+            - DataPipelineStack
+            - Outputs.DataBucketName  
+        DataBucketArn: 
+          Fn::GetAtt: 
+            - DataPipelineStack
+            - Outputs.DataBucketArn
+      Tags: 
+        - Key: AppName
+          Value: !Ref AppName
+        - Key: AppVersion
+          Value: !Ref AppVersion
+        - Key: Stage
+          Value: !Ref Stage
+        - Key: Service
+          Value: data-lake
+Outputs:
+  AppName:
+    Description: "App name" 
+    Value: !Ref AppName
+  AppVersion:
+    Description: "App version"
+    Value: !Ref AppVersion
+  StackNameReference:
+    Description: "Reference for this stack's name"
+    Value: !Join
+      - '-'
+      - - !Ref Stage
+        - !Ref AppName
+        - !Ref AppVersion
+        - !Ref AWS::Region
+  DataBucketName:
+    Description: "S3 Bucket for storing Reddit posts data"
+    Value: !GetAtt DataPipelineStack.Outputs.DataBucketName
+    Export:
+      Name: !Join [ "-", [ !Ref "AWS::StackName", DataBucketName ] ]
+  DataBucketArn:
+    Description: "S3 Bucket Arn for storing Reddit posts data"
+    Value: !GetAtt DataPipelineStack.Outputs.DataBucketArn
+    Export:
+      Name: !Join [ "-", [ !Ref "AWS::StackName", DataBucketArn ] ]
+  ConfigBucketName:
+    Description: "S3 Bucket for storing config data"
+    Value: !GetAtt DataPipelineStack.Outputs.ConfigBucketName
+    Export:
+      Name: !Join [ "-", [ !Ref "AWS::StackName", ConfigBucketName ] ]
+  ConfigBucketArn:
+    Description: "S3 Bucket Arn for storing config data"
+    Value: !GetAtt DataPipelineStack.Outputs.ConfigBucketArn
+    Export:
+      Name: !Join [ "-", [ !Ref "AWS::StackName", ConfigBucketArn ] ]
+  KinesisFirehoseDeliveryStreamName:
+    Description: Name of the Kinesis Firehose delivery stream
+    Value: !GetAtt DataPipelineStack.Outputs.KinesisFirehoseDeliveryStreamName
+    Export:
+      Name: !Sub "${AWS::StackName}-KinesisFirehoseDeliveryStreamName"
+  KinesisFirehoseDeliveryStreamArn:
+    Description: Arn of the Kinesis Firehose delivery stream
+    Value: !GetAtt DataPipelineStack.Outputs.KinesisFirehoseDeliveryStreamArn
+    Export:
+      Name: !Sub "${AWS::StackName}-KinesisFirehoseDeliveryStreamArn"
+  CollectSubredditsQueueName:
+    Description: 'Name of SQS Queue'
+    Value: !GetAtt DataPipelineStack.Outputs.CollectSubredditsQueueName
+  CollectSubredditsQueueArn:
+    Description: 'Arn of SQS Queue'
+    Value: !GetAtt DataPipelineStack.Outputs.CollectSubredditsQueueArn
+  CollectSubredditsQueueURL:
+    Description: 'URL of SQS Queue'
+    Value: !GetAtt DataPipelineStack.Outputs.CollectSubredditsQueueURL
+  StackName:
+    Description: StackName
+    Value: !Sub ${AWS::StackName}

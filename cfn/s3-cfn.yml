@@ -1,0 +1,38 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Reddit data mining service
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+    AllowedValues:
+      - dev
+      - prod
+  AppName:
+    Type: String
+    Default: 'reddit-pipeline'
+  AppVersion:
+    Type: String
+    Default: 1
+Resources:
+  CFNBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join 
+        - '-'
+        - - !Ref Stage
+          - !Ref AppName
+          - !Ref AppVersion
+          - 'cfn'
+          - !Ref AWS::Region
+          - !Ref AWS::AccountId
+Outputs:
+  CFNBucketName:
+    Description: "S3 Bucket for cfn templates"
+    Value: !Ref CFNBucket
+    Export:
+      Name: !Sub "${AWS::StackName}-CFNBucketName"
+  CFNBucketArn:
+    Description: "S3 Bucket Arn for cfn templates"
+    Value: !GetAtt CFNBucket.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-CFNBucketArn"
