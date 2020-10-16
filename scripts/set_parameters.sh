@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
 # Reddit API Params
-CLIENT_ID=hYOoZaQK3ZsJqw
-CLIENT_SECRET=WenXYVT8isAzRDxddc8_e_B38Tc
+CLIENT_ID= #CLIENT_ID
+CLIENT_SECRET= #CLIENT_SECRET
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 USERAGENT=ssrp-$ACCOUNT_ID
-USERNAME=abk7x4
-PASSWORD=redditg2r0e2g0
+USERNAME= #USERNAME
+PASSWORD= #PASSWORD
 
 # Stack params
 STAGE=${1:-dev}
