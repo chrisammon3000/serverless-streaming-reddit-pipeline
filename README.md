@@ -31,11 +31,11 @@ This service employs a fan-out architecture where a cron scheduled Lambda functi
 3. Input Reddit API credentials in `scripts/set_parameters.sh`:
    ```
    # Reddit API Params
-   CLIENT_ID=hYOoZaQK3ZsJqw
-   CLIENT_SECRET=WenXYVT8isAzRDxddc8_e_B38Tc
+   CLIENT_ID=<CLIENT_ID>
+   CLIENT_SECRET=<CLIENT_SECRET>
    USERAGENT=ssrp
-   USERNAME=abk7x4
-   PASSWORD=redditg2r0e2g0
+   USERNAME=<USERNAME>
+   PASSWORD=<PASSWORD>
    ```
 
 ### Deploy AWS Infrastructure
