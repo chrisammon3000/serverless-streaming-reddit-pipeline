@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-# Stack params
-STAGE=${1:-dev}
-APP_NAME=${2:-reddit-pipeline}
-APP_VERSION=${3:-1}
-REGION=${4:-us-east-1}
-SSM_KEY=$STAGE-$APP_NAME/$APP_VERSION/$REGION
+# # Stack params
+# STAGE=${1:-prod}
+# APP_NAME=${2:-reddit-pipeline}
+# APP_VERSION=${3:-1}
+# REGION=${4:-us-east-1}
+# SSM_KEY=$STAGE-$APP_NAME/$APP_VERSION/$REGION
 
 aws ssm delete-parameter --name /$SSM_KEY/praw_cid
 

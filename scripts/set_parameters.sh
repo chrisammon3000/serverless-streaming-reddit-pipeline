@@ -8,14 +8,16 @@ USERAGENT=ssrp-$ACCOUNT_ID
 USERNAME= #USERNAME
 PASSWORD= #PASSWORD
 
-# Stack params
-STAGE=${1:-dev}
-APP_NAME=${2:-reddit-pipeline}
-APP_VERSION=${3:-1}
-REGION=${4:-us-east-1}
+# # Stack params
+# STAGE=${1:-prod}
+# APP_NAME=${2:-reddit-pipeline}
+# =${3:-1}
+# REGION=${4:-us-east-1}
+# STACK_NAME=$STAGE-$APP_NAME-$-$REGION
+
 UPDATE_SSM=${5:-true}
-STACK_NAME=$STAGE-$APP_NAME-$APP_VERSION-$REGION
-SSM_KEY=$STAGE-$APP_NAME/$APP_VERSION/$REGION
+
+export SSM_KEY=$STAGE-$APP_NAME/$REGION
 
 echo -e "\e[38;5;0;48;5;255m####### Confirm SSM parameters: #######\e[0m"
 echo "Client ID: $CLIENT_ID"

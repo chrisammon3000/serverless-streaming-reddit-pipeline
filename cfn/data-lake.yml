@@ -3,8 +3,6 @@ Description: "Deploys a data bucket and config bucket to S3"
 Parameters:
   AppName:
     Type: String
-  AppVersion:
-    Type: String
   Stage:
     Type: String
   DataBucketArn:
@@ -21,7 +19,6 @@ Resources:
           - '-'
           - - !Ref Stage
             - !Ref AppName
-            - !Ref AppVersion
             - database
   SubredditDataCrawlerRole:
     Type: AWS::IAM::Role
@@ -30,14 +27,12 @@ Resources:
         - '-'
         - - !Ref Stage
           - !Ref AppName
-          - !Ref AppVersion
           - !Ref AWS::Region
           - subreddit-crawler
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: !Ref AppVersion
-            Effect: Allow
+          - Effect: Allow
             Principal:
               Service:
                 - glue.amazonaws.com
@@ -54,7 +49,6 @@ Resources:
           - '-'
           - - !Ref Stage
             - !Ref AppName
-            - !Ref AppVersion
             - !Ref AWS::Region
             - subreddit-crawler-policy
           PolicyDocument:
@@ -79,7 +73,6 @@ Resources:
         - '-'
         - - !Ref Stage
           - !Ref AppName
-          - !Ref AppVersion
           - !Ref AWS::Region
           - subreddit-crawler
       Role: !GetAtt SubredditDataCrawlerRole.Arn
@@ -99,7 +92,6 @@ Resources:
         - '-'
         - - !Ref Stage
           - !Ref AppName
-          - !Ref AppVersion
           - !Ref AWS::Region
           - athena-workgroup
       State: ENABLED

@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-STAGE=${1:-dev}
-APP_NAME=${2:-reddit-pipeline}
-APP_VERSION=${3:-1}
-REGION=${4:-us-east-1}
-ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-STACK_NAME=$STAGE-$APP_NAME-$APP_VERSION-$REGION
-S3_KEY="/$APP_NAME/$STAGE/version_$APP_VERSION/"
+export STAGE=${1:-prod}
+export APP_NAME=${2:-reddit-pipeline}
+export REGION=${3:-us-east-1}
+export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+export STACK_NAME=$STAGE-$APP_NAME-$REGION
+
+S3_KEY="/$APP_NAME/$STAGE/"
 
 # Not used
 CONFIG_PATH=config/load-subreddits.json
@@ -36,13 +36,12 @@ fi
 echo -e "\e[38;5;0;48;5;255m####### Confirm CloudFormation parameters: #######\e[0m"
 echo "Stage: $STAGE"
 echo "App name: $APP_NAME"
-echo "App version: $APP_VERSION"
 echo "AWS Region: $REGION"
 echo "Stack name: $STACK_NAME"
 echo
 
 # Update ssm params if indicated
-bash $(dirname "$0")/set_parameters.sh $STAGE $APP_NAME $APP_VERSION $REGION $UPDATE_SSM
+bash $(dirname "$0")/set_parameters.sh $STAGE $APP_NAME $REGION $UPDATE_SSM
 if [[ $? != 0 ]]; then exit $?; fi
 
 echo -e "\e[38;5;0;48;5;255m******* Deploying CloudFormation templates bucket... *******\e[0m"

@@ -3,16 +3,13 @@ Description: Reddit data mining service
 Parameters:
   Stage:
     Type: String
-    Default: dev
+    Default: prod
     AllowedValues:
       - dev
       - prod
   AppName:
     Type: String
     Default: 'reddit-pipeline'
-  AppVersion:
-    Type: String
-    Default: 1
   DataPipelineCFN:
     Description: 'Name of data pipeline cfn file'
     Default: 'pipeline.yml'
@@ -29,17 +26,14 @@ Resources:
         - '/'
         - - !Sub 'https://s3.${AWS::Region}.amazonaws.com'
           - Fn::ImportValue: 
-              !Sub '${Stage}-${AppName}-${AppVersion}-${AWS::Region}-s3-CFNBucketName' # templates bucket name
-          - !Sub '${AppName}/${Stage}/version_${AppVersion}/${DataPipelineCFN}' # object key
+              !Sub '${Stage}-${AppName}-${AWS::Region}-s3-CFNBucketName' # templates bucket name
+          - !Sub '${AppName}/${Stage}/${DataPipelineCFN}' # object key
       Parameters:
         AppName: !Ref AppName
-        AppVersion: !Ref AppVersion
         Stage: !Ref Stage
       Tags: 
         - Key: AppName
           Value: !Ref AppName
-        - Key: AppVersion
-          Value: !Ref AppVersion
         - Key: Stage
           Value: !Ref Stage
         - Key: Service
@@ -51,11 +45,10 @@ Resources:
         - '/'
         - - !Sub 'https://s3.${AWS::Region}.amazonaws.com'
           - Fn::ImportValue: 
-              !Sub '${Stage}-${AppName}-${AppVersion}-${AWS::Region}-s3-CFNBucketName' # templates bucket name
-          - !Sub '${AppName}/${Stage}/version_${AppVersion}/${DataLakeCFN}' # object key
+              !Sub '${Stage}-${AppName}-${AWS::Region}-s3-CFNBucketName' # templates bucket name
+          - !Sub '${AppName}/${Stage}//${DataLakeCFN}' # object key
       Parameters:
         AppName: !Ref AppName
-        AppVersion: !Ref AppVersion
         Stage: !Ref Stage
         DataBucketName: 
           Fn::GetAtt: 
@@ -68,8 +61,6 @@ Resources:
       Tags: 
         - Key: AppName
           Value: !Ref AppName
-        - Key: AppVersion
-          Value: !Ref AppVersion
         - Key: Stage
           Value: !Ref Stage
         - Key: Service
@@ -78,16 +69,12 @@ Outputs:
   AppName:
     Description: "App name" 
     Value: !Ref AppName
-  AppVersion:
-    Description: "App version"
-    Value: !Ref AppVersion
   StackNameReference:
     Description: "Reference for this stack's name"
     Value: !Join
       - '-'
       - - !Ref Stage
         - !Ref AppName
-        - !Ref AppVersion
         - !Ref AWS::Region
   DataBucketName:
     Description: "S3 Bucket for storing Reddit posts data"

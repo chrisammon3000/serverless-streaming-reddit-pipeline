@@ -3,8 +3,6 @@ Description: "Deploys a data bucket and config bucket to S3"
 Parameters:
   AppName:
     Type: String
-  AppVersion:
-    Type: String
   Stage:
     Type: String
 Resources:
@@ -15,7 +13,6 @@ Resources:
         - '-'
         - - !Ref Stage
           - !Ref AppName
-          - !Ref AppVersion
           - !Ref AWS::Region
           - 'reddit-data'
   ConfigBucket:
@@ -25,7 +22,6 @@ Resources:
         - '-'
         - - !Ref Stage
           - !Ref AppName
-          - !Ref AppVersion
           - !Ref AWS::Region
           - 'config'
   ConfigBucketPolicy: 
@@ -54,7 +50,6 @@ Resources:
         - '-'
         - - !Ref Stage
           - !Ref AppName
-          - !Ref AppVersion
           - !Ref AWS::Region
           - 'subreddits-delivery-stream'
       DeliveryStreamType: DirectPut
@@ -73,7 +68,6 @@ Resources:
         - '-'
         - - !Ref Stage
           - !Ref AppName
-          - !Ref AppVersion
           - !Ref AWS::Region
           - firehose-s3-role
       AssumeRolePolicyDocument:
@@ -94,7 +88,6 @@ Resources:
         - '-'
         - - !Ref Stage
           - !Ref AppName
-          - !Ref AppVersion
           - !Ref AWS::Region
           - firehose-s3-policy
       PolicyDocument:
@@ -129,7 +122,6 @@ Resources:
         - '-'
         - - !Ref Stage
           - !Ref AppName
-          - !Ref AppVersion
           - !Ref AWS::Region
           - subreddits-queue
       VisibilityTimeout: 1800
@@ -147,7 +139,6 @@ Resources:
         - '-'
         - - !Ref Stage
           - !Ref AppName
-          - !Ref AppVersion
           - !Ref AWS::Region
           - subreddits-DL-queue 
   CollectSubredditsQueuePolicy: 

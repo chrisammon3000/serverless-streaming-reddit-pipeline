@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
-STAGE=${1:-dev}
-APP_NAME=${2:-reddit-pipeline}
-APP_VERSION=${3:-1}
-REGION=${4:-us-east-1}
-STACK_NAME=$STAGE-$APP_NAME-$APP_VERSION-$REGION
+# STAGE=${1:-prod}
+# APP_NAME=${2:-reddit-pipeline}
+# APP_VERSION=${3:-1}
+# REGION=${4:-us-east-1}
+# STACK_NAME=$STAGE-$APP_NAME-$APP_VERSION-$REGION
 
 read -p "This will delete all resources and data. Continue? " -n 1 -r
 echo && echo
