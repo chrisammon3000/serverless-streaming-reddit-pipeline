@@ -46,7 +46,7 @@ Resources:
         - - !Sub 'https://s3.${AWS::Region}.amazonaws.com'
           - Fn::ImportValue: 
               !Sub '${Stage}-${AppName}-${AWS::Region}-s3-CFNBucketName' # templates bucket name
-          - !Sub '${AppName}/${Stage}//${DataLakeCFN}' # object key
+          - !Sub '${AppName}/${Stage}/${DataLakeCFN}' # object key
       Parameters:
         AppName: !Ref AppName
         Stage: !Ref Stage

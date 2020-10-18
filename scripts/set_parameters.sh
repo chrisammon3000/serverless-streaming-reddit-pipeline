@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
 # Reddit API Params
-CLIENT_ID= #CLIENT_ID
-CLIENT_SECRET= #CLIENT_SECRET
+CLIENT_ID=aYSpDVIL9aTSlA
+CLIENT_SECRET=19fpWQf5zO_VDg6FjMb5dwvcwuU
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 USERAGENT=ssrp-$ACCOUNT_ID
-USERNAME= #USERNAME
-PASSWORD= #PASSWORD
+USERNAME=abk7x4
+PASSWORD=abkg2r0e2g0
 
 # # Stack params
 # STAGE=${1:-prod}
@@ -15,7 +15,7 @@ PASSWORD= #PASSWORD
 # REGION=${4:-us-east-1}
 # STACK_NAME=$STAGE-$APP_NAME-$-$REGION
 
-UPDATE_SSM=${5:-true}
+UPDATE_SSM=${4:-true}
 
 export SSM_KEY=$STAGE-$APP_NAME/$REGION
 
@@ -33,7 +33,7 @@ echo && echo
 if [[ ! $REPLY =~ ^[Yy]$ ]]
 then
     echo "Exiting"
-    [[ "$0" = "$BASH_SOURCE" ]] && exit 0 || return 0
+    [[ "$0" = "$BASH_SOURCE" ]] && exit 1 || return 1
 fi
 
 if [[ ! $UPDATE_SSM = true ]]

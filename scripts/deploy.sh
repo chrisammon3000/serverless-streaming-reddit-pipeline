@@ -31,7 +31,6 @@ fi
 
 # read -p "Deploy Serverless Framework? " -n 1 -r
 
-
 # Confirmation of parameters
 echo -e "\e[38;5;0;48;5;255m####### Confirm CloudFormation parameters: #######\e[0m"
 echo "Stage: $STAGE"
