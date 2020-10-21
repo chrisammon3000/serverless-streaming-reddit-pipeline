@@ -1,17 +1,9 @@
 #!/usr/bin/env bash
 
-export STAGE=${1:-prod}
-export APP_NAME=${2:-reddit-pipeline}
-export REGION=${3:-us-east-1}
-export ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-export STACK_NAME=$STAGE-$APP_NAME-$REGION
+# Get environment variables
+source $(dirname "$0")/set_env.sh
 
-S3_KEY="/$APP_NAME/$STAGE/"
-
-# Not used
-CONFIG_PATH=config/load-subreddits.json
-
-UPDATE_SSM=false
+S3_KEY="/$APP_NAME/$STAGE/version_$APP_VERSION/"
 CFN_MASTER_PATH="cfn/master-stack.yml"
 CFN_S3_PATH="cfn/s3-cfn.yml"
 CFN_DIR=(${CFN_MASTER_PATH//\// })
@@ -20,8 +12,7 @@ CFN_DIR=(${CFN_MASTER_PATH//\// })
 echo
 echo "SSM Parameters must be set before the first deployment."
 read -p "Update SSM parameters? " -n 1 -r
-printf '\n\n'
-
+#printf '\n\n'
 if [[ $REPLY =~ ^[Yy]$ ]]
 then
     UPDATE_SSM=true
@@ -29,20 +20,31 @@ else
     UPDATE_SSM=false
 fi
 
-# read -p "Deploy Serverless Framework? " -n 1 -r
+# Prompt to deploy Serverless
+echo
+read -p "Deploy Serverless Framework? " -n 1 -r
+printf '\n\n'
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+    DEPLOY_SLS=true
+else
+    DEPLOY_SLS=false
+fi
 
 # Confirmation of parameters
 echo -e "\e[38;5;0;48;5;255m####### Confirm CloudFormation parameters: #######\e[0m"
 echo "Stage: $STAGE"
 echo "App name: $APP_NAME"
+echo "App version: $APP_VERSION"
 echo "AWS Region: $REGION"
 echo "Stack name: $STACK_NAME"
 echo
 
 # Update ssm params if indicated
-bash $(dirname "$0")/set_parameters.sh $STAGE $APP_NAME $REGION $UPDATE_SSM
+bash $(dirname "$0")/set_parameters.sh $UPDATE_SSM
 if [[ $? != 0 ]]; then exit $?; fi
 
+# Deploy CloudFormation
 echo -e "\e[38;5;0;48;5;255m******* Deploying CloudFormation templates bucket... *******\e[0m"
 aws --region $REGION cloudformation deploy \
 --template-file $CFN_S3_PATH \
@@ -77,6 +79,13 @@ S3_CONFIG_BUCKET=$(aws cloudformation describe-stacks \
 --query "Stacks[0].Outputs[?OutputKey=='ConfigBucketName'].OutputValue" \
 --output text)
 
-aws s3 cp ./$CONFIG_PATH s3://$S3_CONFIG_BUCKET/$CONFIG_PATH
+aws s3 cp ./config s3://$S3_CONFIG_BUCKET/config --recursive
+
+# Deploy Serverless if indicated
+if [[ $DEPLOY_SLS = true ]]
+then 
+    cd src/functions/pipeline && \
+    serverless deploy
+fi
 
 exit 0

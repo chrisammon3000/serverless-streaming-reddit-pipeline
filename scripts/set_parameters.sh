@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 
-# Reddit API Params
-CLIENT_ID=aYSpDVIL9aTSlA
-CLIENT_SECRET=19fpWQf5zO_VDg6FjMb5dwvcwuU
-ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-USERAGENT=ssrp-$ACCOUNT_ID
-USERNAME=abk7x4
-PASSWORD=abkg2r0e2g0
+# # Reddit API Params
+# CLIENT_ID=aYSpDVIL9aTSlA
+# CLIENT_SECRET=19fpWQf5zO_VDg6FjMb5dwvcwuU
+# ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+# USERAGENT=ssrp-$ACCOUNT_ID
+# USERNAME=abk7x4
+# PASSWORD=abkg2r0e2g0
 
 # # Stack params
 # STAGE=${1:-prod}
@@ -15,9 +15,11 @@ PASSWORD=abkg2r0e2g0
 # REGION=${4:-us-east-1}
 # STACK_NAME=$STAGE-$APP_NAME-$-$REGION
 
-UPDATE_SSM=${4:-true}
+UPDATE_SSM=${1:-true}
 
-export SSM_KEY=$STAGE-$APP_NAME/$REGION
+source $(dirname "$0")/set_env.sh
+
+# export SSM_KEY=$STAGE-$APP_NAME-$APP_VERSION/$REGION
 
 echo -e "\e[38;5;0;48;5;255m####### Confirm SSM parameters: #######\e[0m"
 echo "Client ID: $CLIENT_ID"

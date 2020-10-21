@@ -1,13 +1,6 @@
 #!/usr/bin/env bash
 
-# . set_env_vars.sh
-
-STAGE=${1:-prod}
-APP_NAME=${2:-reddit-pipeline}
-APP_VERSION=${3:-1}
-REGION=${4:-us-east-1}
-STACK_NAME=$STAGE-$APP_NAME-$APP_VERSION-$REGION
-
+source $(dirname "$0")/set_env.sh
 read -p "This will delete all resources and data. Continue? " -n 1 -r
 echo && echo
 
@@ -24,7 +17,6 @@ serverless remove
 
 echo -e "\e[38;5;0;48;5;255m******* Deleting S3 buckets and objects... *******\e[0m"
 # Get and delete objects on cfn bucket
-#cd -
 S3_CFN_BUCKET=$(aws cloudformation describe-stacks \
     --stack-name $STACK_NAME-s3 \
     --query "Stacks[0].Outputs[?OutputKey=='CFNBucketName'].OutputValue" \
@@ -51,16 +43,24 @@ echo "Deleted S3 bucket: $S3_CONFIG_BUCKET"
 # Delete stacks
 echo -e "\e[38;5;0;48;5;255m******* Deleting CloudFormation stacks... *******\e[0m"
 
-# cfn templates
-aws cloudformation delete-stack \
---stack-name $STACK_NAME-s3
-echo "Deleted stack: $STACK_NAME-s3"
-
-# master
+# Delete CloudFormation nested stack
 aws cloudformation delete-stack \
 --stack-name $STACK_NAME
 echo "Deleted stack: $STACK_NAME"
 
-bash $(dirname "$0")/delete_parameters.sh
+# Delete S3 stack
+aws cloudformation delete-stack \
+--stack-name $STACK_NAME-s3
+echo "Deleted stack: $STACK_NAME-s3"
+
+# Delete SSM Parameters
+echo -e "\e[38;5;0;48;5;255m******* Deleting SSM Parameters... *******\e[0m"
+aws ssm delete-parameter --name /$SSM_KEY/praw_cid
+aws ssm delete-parameter --name /$SSM_KEY/praw_secret
+aws ssm delete-parameter --name /$SSM_KEY/praw_useragent
+aws ssm delete-parameter --name /$SSM_KEY/praw_username
+aws ssm delete-parameter --name /$SSM_KEY/praw_password
+
+echo "Finished"
 
 exit 0
