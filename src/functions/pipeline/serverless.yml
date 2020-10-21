@@ -76,9 +76,9 @@ functions:
     package:
       include:
           - libs/*
-    timeout: 60
-    memorySize: 1024
-    reservedConcurrency: 10
+    timeout: 120
+    memorySize: 512
+    reservedConcurrency: 5
     events:
       - sqs: 
           arn: ${self:custom.collectsubredditsqueue_arn}

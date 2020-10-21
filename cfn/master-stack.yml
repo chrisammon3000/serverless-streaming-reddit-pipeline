@@ -1,9 +1,9 @@
 # # Sync to cfn bucket
-# aws s3 cp ./cfn s3://vid-masher-cfn-templates-us-east-1-531868584498/vid-masher-rdt/dev/version_2/ --recursive
+# aws s3 cp ./cfn s3://vid-masher-cfn-templates-us-east-1-531868584498/reddit-pipeline/dev/version_2/ --recursive
 # # Deploy
 # aws --region us-east-1 cloudformation deploy \
 # --template-file cfn/master.yml \
-# --stack-name dev-vid-masher-rdt-2-us-east-1 \
+# --stack-name dev-reddit-pipeline-2-us-east-1 \
 # --capabilities CAPABILITY_NAMED_IAM
 
 AWSTemplateFormatVersion: '2010-09-09'
@@ -17,10 +17,10 @@ Parameters:
       - prod
   AppName:
     Type: String
-    Default: 'vid-masher-rdt'
+    Default: 'reddit-pipeline'
   AppVersion:
     Type: String
-    Default: 3
+    Default: 1
   DataPipelineCFN:
     Description: 'Name of data pipeline cfn file'
     Default: 'pipeline.yml'

@@ -9,10 +9,10 @@ Parameters:
       - prod
   AppName:
     Type: String
-    Default: 'vid-masher-rdt'
+    Default: 'reddit-pipeline'
   AppVersion:
     Type: String
-    Default: 3
+    Default: 1
 Resources:
   CFNBucket:
     Type: AWS::S3::Bucket
