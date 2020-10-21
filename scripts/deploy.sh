@@ -73,13 +73,17 @@ aws --region $REGION cloudformation deploy \
 --capabilities CAPABILITY_NAMED_IAM
 
 # Sync config files
+echo
 echo -e "\e[38;5;0;48;5;255m******* Syncing config files... *******\e[0m"
+echo
 S3_CONFIG_BUCKET=$(aws cloudformation describe-stacks \
 --stack-name $STACK_NAME \
 --query "Stacks[0].Outputs[?OutputKey=='ConfigBucketName'].OutputValue" \
 --output text)
 
 aws s3 cp ./config s3://$S3_CONFIG_BUCKET/config --recursive
+aws s3 cp ./glue-scripts s3://$S3_CONFIG_BUCKET/glue_scripts --recursive
+
 
 # Deploy Serverless if indicated
 if [[ $DEPLOY_SLS = true ]]

@@ -11,8 +11,12 @@ Parameters:
     Type: String
   DataBucketName:
     Type: String
+  ConfigBucketArn:
+    Type: String
+  ConfigBucketName:
+    Type: String
 Resources:
-  VidMasherRDTGlueRole:
+  RedditPipelineGlueRole:
     Type: AWS::IAM::Role
     Properties:
       RoleName: !Join
@@ -55,7 +59,7 @@ Resources:
                     - ""
                     - - !Ref DataBucketArn
                       - "/*" 
-  VidMasherRDTDatabase:
+  RedditPipelineDatabase:
     Type: AWS::Glue::Database
     Properties:
       CatalogId: !Ref AWS::AccountId
@@ -75,17 +79,51 @@ Resources:
           - !Ref AppName
           - !Ref AppVersion
           - !Ref AWS::Region
-          - subreddit-crawler
-      Role: !GetAtt VidMasherRDTGlueRole.Arn
+          - raw-subreddit-crawler
+      Role: !GetAtt RedditPipelineGlueRole.Arn
       Targets:
         S3Targets:
           - Path: !Join ['', [s3://, !Ref DataBucketName, /data/raw_reddit_posts_json]]
-      DatabaseName: !Ref VidMasherRDTDatabase
-      TablePrefix: !Join ['_', [!Ref Stage, 'vm_rdt', !Ref AppVersion, 'test2', '']]
+      DatabaseName: !Ref RedditPipelineDatabase
+      TablePrefix: !Join ['_', [!Ref Stage, 'ssrp', !Ref AppVersion, '']]
       SchemaChangePolicy:
         UpdateBehavior: "UPDATE_IN_DATABASE"
       Schedule:
         ScheduleExpression: cron(0 3/12 * * ? *)
+
+  JSONToParquetETL:
+    Type: AWS::Glue::Job
+    Properties:
+      Name: !Join 
+        - '-'
+        - - !Ref Stage
+          - !Ref AppName
+          - !Ref AppVersion
+          - !Ref AWS::Region
+          - json-parquet-etl
+      Role: !GetAtt RedditPipelineGlueRole.Arn
+      GlueVersion: '2.0'
+      Command:
+        Name: glueetl
+        PythonVersion: '3'
+        ScriptLocation: !Sub "s3://${ConfigBucketName}/glue_scripts/json_to_parquet.py"
+      DefaultArguments: {
+          "--s3_output_path": !Sub "s3://${DataBucketName}/raw_reddit_posts_parquet",
+          "--source_glue_database": !Ref RedditPipelineDatabase,
+          "--source_glue_table": !Join ['_', [!Ref Stage, 'ssrp', !Ref AppVersion, 'raw_reddit_posts_json']]
+          "--job-bookmark-option": "job-bookmark-enable",
+          # "--enable-spark-ui": "true",
+          # "--spark-event-logs-path": !Sub "s3://${LogBucketName}/glue-etl-jobs/"
+      }
+      Description: "Convert raw JSON subreddit data to Parquet"
+      WorkerType: Standard
+      NumberOfWorkers: 2
+      ExecutionProperty:
+        MaxConcurrentRuns: 2
+      MaxRetries: 0
+      Timeout: 30
+      
+
 Outputs:
   SubredditDataCrawler:
     Description: Subreddit raw data crawler
