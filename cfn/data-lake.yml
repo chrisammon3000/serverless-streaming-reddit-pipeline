@@ -100,7 +100,7 @@ Resources:
           - !Ref AppName
           - !Ref AppVersion
           - !Ref AWS::Region
-          - json-parquet-etl
+          - json-to-parquet-etl
       Role: !GetAtt RedditPipelineGlueRole.Arn
       GlueVersion: '2.0'
       Command:
@@ -110,8 +110,8 @@ Resources:
       DefaultArguments: {
           "--s3_output_path": !Sub "s3://${DataBucketName}/raw_reddit_posts_parquet",
           "--source_glue_database": !Ref RedditPipelineDatabase,
-          "--source_glue_table": !Join ['_', [!Ref Stage, 'ssrp', !Ref AppVersion, 'raw_reddit_posts_json']]
-          "--job-bookmark-option": "job-bookmark-enable",
+          "--source_glue_table": !Join ['_', [!Ref Stage, 'ssrp', !Ref AppVersion, 'raw_reddit_posts_json']],
+          "--job-bookmark-option": "job-bookmark-enable"
           # "--enable-spark-ui": "true",
           # "--spark-event-logs-path": !Sub "s3://${LogBucketName}/glue-etl-jobs/"
       }
