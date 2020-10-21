@@ -90,7 +90,6 @@ Resources:
         UpdateBehavior: "UPDATE_IN_DATABASE"
       Schedule:
         ScheduleExpression: cron(0 3/12 * * ? *)
-
   JSONToParquetETL:
     Type: AWS::Glue::Job
     Properties:
@@ -108,12 +107,12 @@ Resources:
         PythonVersion: '3'
         ScriptLocation: !Sub "s3://${ConfigBucketName}/glue_scripts/json_to_parquet.py"
       DefaultArguments: {
-          "--s3_output_path": !Sub "s3://${DataBucketName}/raw_reddit_posts_parquet",
+          "--s3_output_path": !Sub "s3://${DataBucketName}/test_1/raw_reddit_posts_parquet",
           "--source_glue_database": !Ref RedditPipelineDatabase,
           "--source_glue_table": !Join ['_', [!Ref Stage, 'ssrp', !Ref AppVersion, 'raw_reddit_posts_json']],
           "--job-bookmark-option": "job-bookmark-enable"
           # "--enable-spark-ui": "true",
-          # "--spark-event-logs-path": !Sub "s3://${LogBucketName}/glue-etl-jobs/"
+          # "--spark-event-logs-path": !Sub "s3://${LogBucketName}/glue-etl-jobs/"  <---- Need to create log bucket
       }
       Description: "Convert raw JSON subreddit data to Parquet"
       WorkerType: Standard
@@ -122,8 +121,6 @@ Resources:
         MaxConcurrentRuns: 2
       MaxRetries: 0
       Timeout: 30
-      
-
 Outputs:
   SubredditDataCrawler:
     Description: Subreddit raw data crawler
