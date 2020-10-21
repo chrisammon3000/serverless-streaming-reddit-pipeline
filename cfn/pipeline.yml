@@ -3,6 +3,8 @@ Description: "Deploys a data bucket and config bucket to S3"
 Parameters:
   AppName:
     Type: String
+  AppVersion:
+    Type: String
   Stage:
     Type: String
 Resources:
@@ -13,6 +15,7 @@ Resources:
         - '-'
         - - !Ref Stage
           - !Ref AppName
+          - !Ref AppVersion
           - !Ref AWS::Region
           - 'reddit-data'
   ConfigBucket:
@@ -22,6 +25,7 @@ Resources:
         - '-'
         - - !Ref Stage
           - !Ref AppName
+          - !Ref AppVersion
           - !Ref AWS::Region
           - 'config'
   ConfigBucketPolicy: 
@@ -50,14 +54,15 @@ Resources:
         - '-'
         - - !Ref Stage
           - !Ref AppName
+          - !Ref AppVersion
           - !Ref AWS::Region
           - 'subreddits-delivery-stream'
       DeliveryStreamType: DirectPut
       ExtendedS3DestinationConfiguration:
         BucketARN: !GetAtt DataBucket.Arn
         BufferingHints: 
-            IntervalInSeconds: 300
-            SizeInMBs: 5
+            IntervalInSeconds: 900
+            SizeInMBs: 128
         Prefix: data/raw_reddit_posts_json/
         ErrorOutputPrefix: data/raw_reddit_posts_json_error/
         RoleARN: !GetAtt KinesisFirehoseDeliveryRole.Arn
@@ -68,12 +73,13 @@ Resources:
         - '-'
         - - !Ref Stage
           - !Ref AppName
+          - !Ref AppVersion
           - !Ref AWS::Region
-          - firehose-s3-role
+          - firehose-s3-role # Change to camelcase
       AssumeRolePolicyDocument:
         Version: 2012-10-17
         Statement:
-          - Sid: ""
+          - Sid: !Ref AppVersion
             Effect: Allow
             Principal:
               Service: firehose.amazonaws.com
@@ -88,6 +94,7 @@ Resources:
         - '-'
         - - !Ref Stage
           - !Ref AppName
+          - !Ref AppVersion
           - !Ref AWS::Region
           - firehose-s3-policy
       PolicyDocument:
@@ -122,10 +129,11 @@ Resources:
         - '-'
         - - !Ref Stage
           - !Ref AppName
+          - !Ref AppVersion
           - !Ref AWS::Region
           - subreddits-queue
-      VisibilityTimeout: 1800
-      MessageRetentionPeriod: 3600
+      VisibilityTimeout: 5400
+      MessageRetentionPeriod: 10800
       RedrivePolicy:
         deadLetterTargetArn:
           Fn::GetAtt:
@@ -139,6 +147,7 @@ Resources:
         - '-'
         - - !Ref Stage
           - !Ref AppName
+          - !Ref AppVersion
           - !Ref AWS::Region
           - subreddits-DL-queue 
   CollectSubredditsQueuePolicy: 

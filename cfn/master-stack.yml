@@ -1,15 +1,26 @@
+# # Sync to cfn bucket
+# aws s3 cp ./cfn s3://vid-masher-cfn-templates-us-east-1-531868584498/vid-masher-rdt/dev/version_2/ --recursive
+# # Deploy
+# aws --region us-east-1 cloudformation deploy \
+# --template-file cfn/master.yml \
+# --stack-name dev-vid-masher-rdt-2-us-east-1 \
+# --capabilities CAPABILITY_NAMED_IAM
+
 AWSTemplateFormatVersion: '2010-09-09'
 Description: Reddit data mining service
 Parameters:
   Stage:
     Type: String
-    Default: prod
+    Default: dev
     AllowedValues:
       - dev
       - prod
   AppName:
     Type: String
-    Default: 'reddit-pipeline'
+    Default: 'vid-masher-rdt'
+  AppVersion:
+    Type: String
+    Default: 3
   DataPipelineCFN:
     Description: 'Name of data pipeline cfn file'
     Default: 'pipeline.yml'
@@ -26,14 +37,17 @@ Resources:
         - '/'
         - - !Sub 'https://s3.${AWS::Region}.amazonaws.com'
           - Fn::ImportValue: 
-              !Sub '${Stage}-${AppName}-${AWS::Region}-s3-CFNBucketName' # templates bucket name
-          - !Sub '${AppName}/${Stage}/${DataPipelineCFN}' # object key
+              !Sub '${Stage}-${AppName}-${AppVersion}-${AWS::Region}-s3-CFNBucketName' # templates bucket name
+          - !Sub '${AppName}/${Stage}/version_${AppVersion}/${DataPipelineCFN}' # object key
       Parameters:
         AppName: !Ref AppName
+        AppVersion: !Ref AppVersion
         Stage: !Ref Stage
       Tags: 
         - Key: AppName
           Value: !Ref AppName
+        - Key: AppVersion
+          Value: !Ref AppVersion
         - Key: Stage
           Value: !Ref Stage
         - Key: Service
@@ -45,10 +59,11 @@ Resources:
         - '/'
         - - !Sub 'https://s3.${AWS::Region}.amazonaws.com'
           - Fn::ImportValue: 
-              !Sub '${Stage}-${AppName}-${AWS::Region}-s3-CFNBucketName' # templates bucket name
-          - !Sub '${AppName}/${Stage}/${DataLakeCFN}' # object key
+              !Sub '${Stage}-${AppName}-${AppVersion}-${AWS::Region}-s3-CFNBucketName' # templates bucket name
+          - !Sub '${AppName}/${Stage}/version_${AppVersion}/${DataLakeCFN}' # object key
       Parameters:
         AppName: !Ref AppName
+        AppVersion: !Ref AppVersion
         Stage: !Ref Stage
         DataBucketName: 
           Fn::GetAtt: 
@@ -61,6 +76,8 @@ Resources:
       Tags: 
         - Key: AppName
           Value: !Ref AppName
+        - Key: AppVersion
+          Value: !Ref AppVersion
         - Key: Stage
           Value: !Ref Stage
         - Key: Service
@@ -69,12 +86,16 @@ Outputs:
   AppName:
     Description: "App name" 
     Value: !Ref AppName
+  AppVersion:
+    Description: "App version"
+    Value: !Ref AppVersion
   StackNameReference:
     Description: "Reference for this stack's name"
     Value: !Join
       - '-'
       - - !Ref Stage
         - !Ref AppName
+        - !Ref AppVersion
         - !Ref AWS::Region
   DataBucketName:
     Description: "S3 Bucket for storing Reddit posts data"

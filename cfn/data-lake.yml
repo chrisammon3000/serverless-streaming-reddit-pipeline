@@ -3,6 +3,8 @@ Description: "Deploys a data bucket and config bucket to S3"
 Parameters:
   AppName:
     Type: String
+  AppVersion:
+    Type: String
   Stage:
     Type: String
   DataBucketArn:
@@ -10,27 +12,17 @@ Parameters:
   DataBucketName:
     Type: String
 Resources:
-  SubredditsDatabase:
-    Type: AWS::Glue::Database
-    Properties:
-      CatalogId: !Ref AWS::AccountId
-      DatabaseInput:
-        Name: !Join 
-          - '-'
-          - - !Ref Stage
-            - !Ref AppName
-            - database
-  SubredditDataCrawlerRole:
+  VidMasherRDTGlueRole:
     Type: AWS::IAM::Role
     Properties:
       RoleName: !Join
         - '-'
         - - !Ref Stage
           - !Ref AppName
+          - !Ref AppVersion
           - !Ref AWS::Region
-          - subreddit-crawler
+          - GlueServiceRole
       AssumeRolePolicyDocument:
-        Version: 2012-10-17
         Statement:
           - Effect: Allow
             Principal:
@@ -38,9 +30,6 @@ Resources:
                 - glue.amazonaws.com
             Action:
               - sts:AssumeRole
-            Condition:
-              StringEquals:
-                "sts:ExternalId": !Ref "AWS::AccountId"
       Path: /
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AWSGlueServiceRole
@@ -49,8 +38,9 @@ Resources:
           - '-'
           - - !Ref Stage
             - !Ref AppName
+            - !Ref AppVersion
             - !Ref AWS::Region
-            - subreddit-crawler-policy
+            - GlueServicePolicy
           PolicyDocument:
             Version: 2012-10-17
             Statement:
@@ -59,13 +49,23 @@ Resources:
                   - s3:GetObject
                   - s3:PutObject
                   - s3:DeleteObject
-                  - s3:ListBucket
                 Resource: 
                   - !Ref DataBucketArn
                   - !Join
-                    - ''
+                    - ""
                     - - !Ref DataBucketArn
-                      - '/*' 
+                      - "/*" 
+  VidMasherRDTDatabase:
+    Type: AWS::Glue::Database
+    Properties:
+      CatalogId: !Ref AWS::AccountId
+      DatabaseInput:
+        Name: !Join 
+          - '-'
+          - - !Ref Stage
+            - !Ref AppName
+            - !Ref AppVersion
+            - database
   SubredditDataCrawler:
     Type: AWS::Glue::Crawler
     Properties:
@@ -73,39 +73,25 @@ Resources:
         - '-'
         - - !Ref Stage
           - !Ref AppName
+          - !Ref AppVersion
           - !Ref AWS::Region
           - subreddit-crawler
-      Role: !GetAtt SubredditDataCrawlerRole.Arn
+      Role: !GetAtt VidMasherRDTGlueRole.Arn
       Targets:
         S3Targets:
           - Path: !Join ['', [s3://, !Ref DataBucketName, /data/raw_reddit_posts_json]]
-      DatabaseName: !Ref SubredditsDatabase
-      TablePrefix: ssrp_
+      DatabaseName: !Ref VidMasherRDTDatabase
+      TablePrefix: !Join ['_', [!Ref Stage, 'vm_rdt', !Ref AppVersion, 'test2', '']]
       SchemaChangePolicy:
         UpdateBehavior: "UPDATE_IN_DATABASE"
       Schedule:
-        ScheduleExpression: cron(0 3 * * ? *)
-  RedditDataWorkgroup:
-    Type: AWS::Athena::WorkGroup
-    Properties: 
-      Name: !Join 
-        - '-'
-        - - !Ref Stage
-          - !Ref AppName
-          - !Ref AWS::Region
-          - athena-workgroup
-      State: ENABLED
+        ScheduleExpression: cron(0 3/12 * * ? *)
 Outputs:
   SubredditDataCrawler:
     Description: Subreddit raw data crawler
     Value: !Ref SubredditDataCrawler
     Export:
-      Name: !Sub '${AWS::StackName}-SubredditDataCrawler'
-  RedditDataWorkgroup:
-    Description: Athena workgroup for Reddit data
-    Value: !Ref RedditDataWorkgroup
-    Export:
-      Name: !Sub '${AWS::StackName}-RedditDataWorkgroup'
+      Name: !Sub "${AWS::StackName}-SubredditDataCrawler"
   StackName:
     Description: StackName
-    Value: !Sub '${AWS::StackName}'
+    Value: !Sub ${AWS::StackName}

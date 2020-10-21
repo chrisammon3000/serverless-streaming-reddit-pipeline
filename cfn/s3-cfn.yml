@@ -3,13 +3,16 @@ Description: Reddit data mining service
 Parameters:
   Stage:
     Type: String
-    Default: prod
+    Default: dev
     AllowedValues:
       - dev
       - prod
   AppName:
     Type: String
-    Default: 'reddit-pipeline'
+    Default: 'vid-masher-rdt'
+  AppVersion:
+    Type: String
+    Default: 3
 Resources:
   CFNBucket:
     Type: AWS::S3::Bucket
@@ -18,17 +21,18 @@ Resources:
         - '-'
         - - !Ref Stage
           - !Ref AppName
+          - !Ref AppVersion
           - 'cfn'
           - !Ref AWS::Region
           - !Ref AWS::AccountId
 Outputs:
   CFNBucketName:
-    Description: "S3 Bucket for cfn templates"
+    Description: "S3 Bucket for vid-masher cfn templates"
     Value: !Ref CFNBucket
     Export:
       Name: !Sub "${AWS::StackName}-CFNBucketName"
   CFNBucketArn:
-    Description: "S3 Bucket Arn for cfn templates"
+    Description: "S3 Bucket Arn for vid-masher cfn templates"
     Value: !GetAtt CFNBucket.Arn
     Export:
       Name: !Sub "${AWS::StackName}-CFNBucketArn"
