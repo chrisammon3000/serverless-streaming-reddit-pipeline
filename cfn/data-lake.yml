@@ -94,8 +94,8 @@ Resources:
       TablePrefix: !Join ['_', [!Ref Stage, 'ssrp', !Ref AppVersion, '']]
       SchemaChangePolicy:
         UpdateBehavior: "UPDATE_IN_DATABASE"
-      Schedule:
-        ScheduleExpression: cron(0 3/12 * * ? *)
+      # Schedule:
+      #   ScheduleExpression: cron(0 3/12 * * ? *)
   JSONToParquetETLJob:
     Type: AWS::Glue::Job
     Properties:
@@ -145,8 +145,80 @@ Resources:
       TablePrefix: !Join ['_', [!Ref Stage, 'ssrp', !Ref AppVersion, '']]
       SchemaChangePolicy:
         UpdateBehavior: "UPDATE_IN_DATABASE"
-      # Schedule:
-      #   ScheduleExpression: cron(0 3/12 * * ? *)
+  SubredditJSONtoParquetWorkflow:
+    Type: AWS::Glue::Workflow
+    Properties: 
+      Name: !Join 
+        - '-'
+        - - !Ref Stage
+          - !Ref AppName
+          - !Ref AppVersion
+          - !Ref AWS::Region
+          - json-to-parquet-workflow
+      Description: Workflow for orchestrating JSON to Parquet conversion
+      # DefaultRunProperties:
+      #   {
+      #     "workflowParameter1": "Foo",
+      #     "workflowParameter2": "Bar",
+      #     "bucket": !Sub "${BaseBucket}"
+      #   }
+  SubredditsRawJSONCrawlerTrigger:
+    Type: AWS::Glue::Trigger
+    Properties:
+      WorkflowName: !Ref SubredditJSONtoParquetWorkflow
+      Name: !Join 
+        - '-'
+        - - !Ref Stage
+          - !Ref AppName
+          - !Ref AppVersion
+          - !Ref AWS::Region
+          - subreddits-raw-json-crawler-trigger
+      Description: Start crawler for raw JSON data
+      Type: ON_DEMAND
+      Actions:
+        - CrawlerName: !Ref SubredditsRawJSONCrawler
+  JSONToParquetETLJobTrigger:
+    Type: AWS::Glue::Trigger
+    Properties:
+      WorkflowName: !Ref SubredditJSONtoParquetWorkflow
+      Name: !Join 
+        - '-'
+        - - !Ref Stage
+          - !Ref AppName
+          - !Ref AppVersion
+          - !Ref AWS::Region
+          - json-to-parquet-etl-trigger
+      Description: Start JSON to Parquet conversion ETL job
+      Type: CONDITIONAL
+      StartOnCreation: True
+      Predicate:
+        Conditions:
+          - LogicalOperator: EQUALS
+            CrawlerName: !Ref SubredditsRawJSONCrawler
+            CrawlState: SUCCEEDED
+      Actions:
+        - JobName: !Ref JSONToParquetETLJob
+  SubredditRawParquetCrawlerTrigger:
+    Type: AWS::Glue::Trigger
+    Properties:
+      WorkflowName: !Ref SubredditJSONtoParquetWorkflow
+      Name: !Join 
+        - '-'
+        - - !Ref Stage
+          - !Ref AppName
+          - !Ref AppVersion
+          - !Ref AWS::Region
+          - subreddits-raw-parquet-crawler-trigger
+      Description: Start crawler for raw Parquet data
+      Type: CONDITIONAL
+      StartOnCreation: True
+      Predicate:
+        Conditions:
+          - LogicalOperator: EQUALS
+            JobName: !Ref JSONToParquetETLJob
+            State: SUCCEEDED
+      Actions:
+        - CrawlerName: !Ref SubredditRawParquetCrawler
 Outputs:
   SubredditsRawJSONCrawler:
     Description: Subreddit raw JSON data crawler
