@@ -71,8 +71,8 @@ Resources:
       ExtendedS3DestinationConfiguration:
         BucketARN: !GetAtt DataBucket.Arn
         BufferingHints: 
-            IntervalInSeconds: 900
-            SizeInMBs: 128
+            IntervalInSeconds: 300
+            SizeInMBs: 5
         Prefix: data/raw_reddit_posts_json/
         ErrorOutputPrefix: data/raw_reddit_posts_json_error/
         RoleARN: !GetAtt KinesisFirehoseDeliveryRole.Arn

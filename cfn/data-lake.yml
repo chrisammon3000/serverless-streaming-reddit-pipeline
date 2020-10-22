@@ -76,7 +76,7 @@ Resources:
             - !Ref AppName
             - !Ref AppVersion
             - database
-  SubredditDataCrawler:
+  SubredditsRawJSONCrawler:
     Type: AWS::Glue::Crawler
     Properties:
       Name: !Join 
@@ -85,7 +85,7 @@ Resources:
           - !Ref AppName
           - !Ref AppVersion
           - !Ref AWS::Region
-          - raw-subreddit-crawler
+          - subreddits-raw-json-crawler
       Role: !GetAtt RedditPipelineGlueRole.Arn
       Targets:
         S3Targets:
@@ -96,7 +96,7 @@ Resources:
         UpdateBehavior: "UPDATE_IN_DATABASE"
       Schedule:
         ScheduleExpression: cron(0 3/12 * * ? *)
-  JSONToParquetETL:
+  JSONToParquetETLJob:
     Type: AWS::Glue::Job
     Properties:
       Name: !Join 
@@ -127,15 +127,37 @@ Resources:
         MaxConcurrentRuns: 2
       MaxRetries: 0
       Timeout: 30
-
-
-
+  SubredditRawParquetCrawler:
+    Type: AWS::Glue::Crawler
+    Properties:
+      Name: !Join 
+        - '-'
+        - - !Ref Stage
+          - !Ref AppName
+          - !Ref AppVersion
+          - !Ref AWS::Region
+          - subreddits-raw-parquet-crawler
+      Role: !GetAtt RedditPipelineGlueRole.Arn
+      Targets:
+        S3Targets:
+          - Path: !Join ['', [s3://, !Ref DataBucketName, /data/raw_reddit_posts_parquet]]
+      DatabaseName: !Ref RedditPipelineDatabase
+      TablePrefix: !Join ['_', [!Ref Stage, 'ssrp', !Ref AppVersion, '']]
+      SchemaChangePolicy:
+        UpdateBehavior: "UPDATE_IN_DATABASE"
+      # Schedule:
+      #   ScheduleExpression: cron(0 3/12 * * ? *)
 Outputs:
-  SubredditDataCrawler:
-    Description: Subreddit raw data crawler
-    Value: !Ref SubredditDataCrawler
+  SubredditsRawJSONCrawler:
+    Description: Subreddit raw JSON data crawler
+    Value: !Ref SubredditsRawJSONCrawler
     Export:
-      Name: !Sub "${AWS::StackName}-SubredditDataCrawler"
+      Name: !Sub "${AWS::StackName}-SubredditsRawJSONCrawler"
+  SubredditRawParquetCrawler:
+    Description: Subreddit raw Parquet data crawler
+    Value: !Ref SubredditRawParquetCrawler
+    Export:
+      Name: !Sub "${AWS::StackName}-SubredditRawParquetCrawler"
   StackName:
     Description: StackName
     Value: !Sub ${AWS::StackName}

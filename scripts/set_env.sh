@@ -2,7 +2,7 @@
 
 STAGE=dev
 APP_NAME=reddit-pipeline
-APP_VERSION=1
+APP_VERSION=2
 REGION=us-east-1
 ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
 STACK_NAME=$STAGE-$APP_NAME-$APP_VERSION-$REGION

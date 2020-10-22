@@ -12,7 +12,7 @@ Parameters:
     Default: 'reddit-pipeline'
   AppVersion:
     Type: String
-    Default: 1
+    Default: 2
 Resources:
   CFNBucket:
     Type: AWS::S3::Bucket

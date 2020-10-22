@@ -20,7 +20,7 @@ Parameters:
     Default: 'reddit-pipeline'
   AppVersion:
     Type: String
-    Default: 1
+    Default: 2
   DataPipelineCFN:
     Description: 'Name of data pipeline cfn file'
     Default: 'pipeline.yml'
