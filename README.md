@@ -28,19 +28,26 @@ This service employs a fan-out architecture where a cron scheduled Lambda functi
    npm install --save serverless-python-requirements
    ```
 
-3. Input Reddit API credentials in `scripts/set_parameters.sh`:
+3. Input Reddit API credentials in `scripts/set_env.sh`:
    ```
-   # Reddit API Params
-   CLIENT_ID= #CLIENT_ID
-   CLIENT_SECRET= #CLIENT_SECRET
+   # set_env.sh
+
+   STAGE=prod
+   APP_NAME=reddit-pipeline
+   REGION=us-east-1
    ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
-   USERAGENT=ssrp-$ACCOUNT_ID
-   USERNAME= #USERNAME
-   PASSWORD= #PASSWORD
+   STACK_NAME=$STAGE-$APP_NAME-$APP_VERSION-$REGION
+
+   # Reddit API Params
+   CLIENT_ID=hYOoZaQK3ZsJqw
+   CLIENT_SECRET=WenXYVT8isAzRDxddc8_e_B38Tc
+   USERAGENT=ssrp
+   USERNAME=abk7x4
+   PASSWORD=abkg2r0e2g0
    ```
 
 ### Deploy AWS Infrastructure
-These instructions will deploy a stack named `prod-reddit-pipeline-us-east-1` using AWS CloudFormation.
+These instructions will deploy a stack named `prod-reddit-pipeline-1-us-east-1` using AWS CloudFormation.
 
    Run `scripts/deploy.sh` to deploy the stack:
    ```
@@ -48,22 +55,18 @@ These instructions will deploy a stack named `prod-reddit-pipeline-us-east-1` us
    bash scripts/deploy.sh
    ```
 
-### Deploy Serverless Framework
-   ```
-   cd src/functions/pipeline &&
-   serverless deploy
-   ```
+The script will prompt to update SSM Parameters and deploy Serverless Framework, respond with 'y' for the first deployment and 'n' for stack updates.
 
 ### Invoke Lambda
    ```
    cd src/functions/pipeline
    serverless invoke --function queueSubreddits \
-   --stage dev \
+   --stage prod \
    --region us-east-1 \
    --log
    ```
 
-   Once `queueSubreddits` has run you can view the worker logs while they collect subreddit data in the CloudWatch log group for the `collectData` function.
+Once `queueSubreddits` has run you can view the worker logs while they collect subreddit data in the CloudWatch log group for the `collectData` function.
 
 ### Querying in Athena
 
