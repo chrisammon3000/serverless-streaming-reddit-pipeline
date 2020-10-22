@@ -40,13 +40,17 @@ Resources:
             Effect: Allow
             Resource: !Sub '${ConfigBucket.Arn}/*'
             Principal:
-              Service: 'lambda.amazonaws.com'
+              Service: 
+                - lambda.amazonaws.com
+                - glue.amazonaws.com
           - Action: 
               - s3:ListBucket # Must be listed separately in bucket policies
             Effect: Allow
             Resource: !Sub '${ConfigBucket.Arn}'
             Principal:
-              Service: 'lambda.amazonaws.com'
+              Service: 
+                - lambda.amazonaws.com
+                - glue.amazonaws.com
   KinesisFirehoseDeliveryStream:
     Type: AWS::KinesisFirehose::DeliveryStream
     Properties:
