@@ -40,17 +40,23 @@ Resources:
             Effect: Allow
             Resource: !Sub '${ConfigBucket.Arn}/*'
             Principal:
-              Service: 
-                - lambda.amazonaws.com
-                - glue.amazonaws.com
+              Service: 'lambda.amazonaws.com'
           - Action: 
               - s3:ListBucket # Must be listed separately in bucket policies
             Effect: Allow
             Resource: !Sub '${ConfigBucket.Arn}'
             Principal:
-              Service: 
-                - lambda.amazonaws.com
-                - glue.amazonaws.com
+              Service: 'lambda.amazonaws.com'
+  GlueScriptsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Join 
+        - '-'
+        - - !Ref Stage
+          - !Ref AppName
+          - !Ref AppVersion
+          - !Ref AWS::Region
+          - 'glue-scripts'
   KinesisFirehoseDeliveryStream:
     Type: AWS::KinesisFirehose::DeliveryStream
     Properties:
@@ -199,6 +205,16 @@ Outputs:
     Value: !GetAtt ConfigBucket.Arn
     Export:
       Name: !Join [ "-", [ !Ref "AWS::StackName", ConfigBucketArn ] ]
+  GlueScriptsBucketName:
+    Description: "S3 Bucket for storing Glue ETL scripts"
+    Value: !Ref GlueScriptsBucket
+    Export:
+      Name: !Join [ "-", [ !Ref "AWS::StackName", GlueScriptsBucketName ] ]
+  GlueScriptsBucketArn:
+    Description: "S3 Bucket Arn for storing Glue ETL scripts"
+    Value: !GetAtt GlueScriptsBucket.Arn
+    Export:
+      Name: !Join [ "-", [ !Ref "AWS::StackName", GlueScriptsBucket ] ]
   KinesisFirehoseDeliveryStreamName:
     Description: Name of the Kinesis Firehose delivery stream
     Value: !Ref KinesisFirehoseDeliveryStream

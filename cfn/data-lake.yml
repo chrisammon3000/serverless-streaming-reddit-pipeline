@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: "Deploys a data bucket and config bucket to S3"
+Description: "Deploys resources for data lake"
 Parameters:
   AppName:
     Type: String
@@ -11,9 +11,7 @@ Parameters:
     Type: String
   DataBucketName:
     Type: String
-  ConfigBucketArn:
-    Type: String
-  ConfigBucketName:
+  GlueScriptsBucketName:
     Type: String
 Resources:
   RedditPipelineGlueRole:
@@ -105,7 +103,7 @@ Resources:
       Command:
         Name: glueetl
         PythonVersion: '3'
-        ScriptLocation: !Sub "s3://${ConfigBucketName}/glue_scripts/json_to_parquet.py"
+        ScriptLocation: !Sub "s3://${GlueScriptsBucketName}/glue_scripts/json_to_parquet.py"
       DefaultArguments: {
           "--s3_output_path": !Sub "s3://${DataBucketName}/test_1/raw_reddit_posts_parquet",
           "--source_glue_database": !Ref RedditPipelineDatabase,
@@ -123,7 +121,7 @@ Resources:
       Timeout: 30
 
 
-      
+
 Outputs:
   SubredditDataCrawler:
     Description: Subreddit raw data crawler

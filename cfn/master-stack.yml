@@ -73,14 +73,10 @@ Resources:
           Fn::GetAtt: 
             - DataPipelineStack
             - Outputs.DataBucketArn
-        ConfigBucketName: 
+        GlueScriptsBucketName: 
           Fn::GetAtt: 
             - DataPipelineStack
-            - Outputs.ConfigBucketName  
-        ConfigBucketArn: 
-          Fn::GetAtt: 
-            - DataPipelineStack
-            - Outputs.ConfigBucketArn
+            - Outputs.GlueScriptsBucketName
       Tags: # combine all app tags into one ie., stage-appname-version-region ( or !Ref stack name)
         - Key: AppName
           Value: !Ref AppName
@@ -125,6 +121,16 @@ Outputs:
     Value: !GetAtt DataPipelineStack.Outputs.ConfigBucketArn
     Export:
       Name: !Join [ "-", [ !Ref "AWS::StackName", ConfigBucketArn ] ]
+  GlueScriptsBucketName:
+    Description: "S3 Bucket for storing Glue ETL scripts"
+    Value: !GetAtt DataPipelineStack.Outputs.GlueScriptsBucketName
+    Export:
+      Name: !Join [ "-", [ !Ref "AWS::StackName", GlueScriptsBucketName ] ]
+  GlueScriptsBucketArn:
+    Description: "S3 Bucket Arn for storing Glue ETL scripts"
+    Value: !GetAtt DataPipelineStack.Outputs.GlueScriptsBucketArn
+    Export:
+      Name: !Join [ "-", [ !Ref "AWS::StackName", GlueScriptsBucketArn ] ]
   KinesisFirehoseDeliveryStreamName:
     Description: Name of the Kinesis Firehose delivery stream
     Value: !GetAtt DataPipelineStack.Outputs.KinesisFirehoseDeliveryStreamName
