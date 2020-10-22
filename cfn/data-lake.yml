@@ -188,7 +188,7 @@ Resources:
           - !Ref AppVersion
           - !Ref AWS::Region
           - json-to-parquet-etl-trigger
-      Description: Start JSON to Parquet conversion ETL job
+      Description: Start JSON to Parquet ETL job
       Type: CONDITIONAL
       StartOnCreation: True
       Predicate:
