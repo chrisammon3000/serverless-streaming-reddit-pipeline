@@ -54,10 +54,10 @@ applymapping1 = ApplyMapping.apply(
         ("useragent", "string", "useragent", "string"), 
         ("num_posts_collected", "int", "num_posts_collected", "int"), 
         ("req_duration", "double", "req_duration", "double"), 
-        ("partition_0", "string", "partition_0", "string"), 
-        ("partition_1", "string", "partition_1", "string"), 
-        ("partition_2", "string", "partition_2", "string"), 
-        ("partition_3", "string", "partition_3", "string")
+        ("partition_0", "string", "year", "string"), 
+        ("partition_1", "string", "month", "string"), 
+        ("partition_2", "string", "day", "string"), 
+        ("partition_3", "string", "hour", "string")
         ], 
         transformation_ctx = "applymapping1")
 
@@ -73,6 +73,7 @@ dropnullfields3 = DropNullFields.apply(
 # coalesce parquet into one
 # https://github.com/aws-samples/aws-glue-samples/blob/master/FAQ_and_How_to.md
 partitioned_dataframe = dropnullfields3.toDF().repartition(1)
+
 partitioned_dynamicframe = DynamicFrame.fromDF(partitioned_dataframe, glueContext, "partitioned_df")
 
 datasink4 = glueContext.write_dynamic_frame.from_options(
@@ -82,7 +83,7 @@ datasink4 = glueContext.write_dynamic_frame.from_options(
         "path": s3_output_path,
         "groupFiles": "inPartition",
         "groupSize": 1024 * 1024,
-        "partitionKeys": ["partition_0", "partition_1", "partition_2", "partition_3"],
+        "partitionKeys": ["year", "month", "day", "hour"],
         }, 
         format = "parquet", 
         transformation_ctx = "datasink4")
