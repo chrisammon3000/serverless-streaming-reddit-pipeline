@@ -17,7 +17,7 @@ Resources:
           - !Ref AppName
           - !Ref AppVersion
           - !Ref AWS::Region
-          - 'reddit-data'
+          - 'data'
   ConfigBucket:
     Type: AWS::S3::Bucket
     Properties:

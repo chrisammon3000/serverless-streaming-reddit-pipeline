@@ -82,7 +82,6 @@ S3_CONFIG_BUCKET=$(aws cloudformation describe-stacks \
 --output text)
 
 aws s3 cp ./config s3://$S3_CONFIG_BUCKET/config --recursive
-#aws s3 cp ./glue-scripts s3://$S3_CONFIG_BUCKET/glue_scripts --recursive
 
 # Sync glue scripts 
 echo
@@ -95,10 +94,12 @@ S3_SCRIPTS_BUCKET=$(aws cloudformation describe-stacks \
 
 aws s3 cp ./glue-scripts s3://$S3_SCRIPTS_BUCKET/glue_scripts --recursive
 
-
 # Deploy Serverless if indicated
 if [[ $DEPLOY_SLS = true ]]
 then 
+    echo
+    echo -e "\e[38;5;0;48;5;255m******* Deploying Serverless Framework... *******\e[0m"
+    echo
     cd src/functions/pipeline && \
     serverless deploy
 fi
