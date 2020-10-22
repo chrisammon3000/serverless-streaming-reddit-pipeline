@@ -40,6 +40,14 @@ S3_CONFIG_BUCKET=$(aws cloudformation describe-stacks \
 aws s3 rm --recursive s3://$S3_CONFIG_BUCKET
 echo "Deleted S3 bucket: $S3_CONFIG_BUCKET"
 
+# Get and delete objects on scripts bucket
+S3_SCRIPTS_BUCKET=$(aws cloudformation describe-stacks \
+    --stack-name $STACK_NAME \
+    --query "Stacks[0].Outputs[?OutputKey=='GlueScriptsBucketName'].OutputValue" \
+    --output text)
+aws s3 rm --recursive s3://$S3_SCRIPTS_BUCKET
+echo "Deleted S3 bucket: $S3_SCRIPTS_BUCKET"
+
 # Delete stacks
 echo -e "\e[38;5;0;48;5;255m******* Deleting CloudFormation stacks... *******\e[0m"
 
