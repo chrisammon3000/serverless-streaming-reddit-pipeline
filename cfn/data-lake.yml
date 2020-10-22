@@ -113,7 +113,7 @@ Resources:
         PythonVersion: '3'
         ScriptLocation: !Sub "s3://${GlueScriptsBucketName}/glue_scripts/json_to_parquet.py"
       DefaultArguments: {
-          "--s3_output_path": !Sub "s3://${DataBucketName}/test_1/raw_reddit_posts_parquet",
+          "--s3_output_path": !Sub "s3://${DataBucketName}/data/raw_reddit_posts_parquet",
           "--source_glue_database": !Ref RedditPipelineDatabase,
           "--source_glue_table": !Join ['_', [!Ref Stage, 'ssrp', !Ref AppVersion, 'raw_reddit_posts_json']],
           "--job-bookmark-option": "job-bookmark-enable"
