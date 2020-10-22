@@ -156,12 +156,6 @@ Resources:
           - !Ref AWS::Region
           - json-to-parquet-workflow
       Description: Workflow for orchestrating JSON to Parquet conversion
-      # DefaultRunProperties:
-      #   {
-      #     "workflowParameter1": "Foo",
-      #     "workflowParameter2": "Bar",
-      #     "bucket": !Sub "${BaseBucket}"
-      #   }
   SubredditsRawJSONCrawlerTrigger:
     Type: AWS::Glue::Trigger
     Properties:
