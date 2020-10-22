@@ -13,6 +13,8 @@ Parameters:
     Type: String
   GlueScriptsBucketName:
     Type: String
+  GlueScriptsBucketArn:
+    Type: String
 Resources:
   RedditPipelineGlueRole:
     Type: AWS::IAM::Role
@@ -51,11 +53,17 @@ Resources:
                   - s3:GetObject
                   - s3:PutObject
                   - s3:DeleteObject
+                  - s3:ListBucket
                 Resource: 
                   - !Ref DataBucketArn
                   - !Join
                     - ""
                     - - !Ref DataBucketArn
+                      - "/*" 
+                  - !Ref GlueScriptsBucketArn
+                  - !Join
+                    - ""
+                    - - !Ref GlueScriptsBucketArn
                       - "/*" 
   RedditPipelineDatabase:
     Type: AWS::Glue::Database

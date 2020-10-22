@@ -77,6 +77,10 @@ Resources:
           Fn::GetAtt: 
             - DataPipelineStack
             - Outputs.GlueScriptsBucketName
+        GlueScriptsBucketArn: 
+          Fn::GetAtt: 
+            - DataPipelineStack
+            - Outputs.GlueScriptsBucketArn
       Tags: # combine all app tags into one ie., stage-appname-version-region ( or !Ref stack name)
         - Key: AppName
           Value: !Ref AppName
