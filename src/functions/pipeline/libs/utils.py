@@ -4,7 +4,6 @@ import json
 import copy
 import logging
 import uuid
-from datetime import datetime
 import time
 from timeit import default_timer as timer
 import boto3
