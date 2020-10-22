@@ -124,6 +124,7 @@ node_modules/
 *.pem
 
 # Scripts
+scripts/set_env.sh
 
 
 # cfn
