@@ -11,7 +11,7 @@ package:
   
 custom:
   appname: reddit-pipeline
-  version: 2
+  version: 1
   pythonRequirements:
     dockerizePip: non-linux
   cfn_stack: ${self:provider.stage}-${self:custom.appname}-${self:custom.version}-${self:provider.region} # aws cloudformation deploy --stack-name base parameter
