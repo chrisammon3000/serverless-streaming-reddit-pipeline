@@ -3,12 +3,46 @@
 serverless-streaming-reddit-pipeline
 ==============================
 
-Streams JSON data from any number of Reddit forums (subreddits) into an S3 data lake. Uses Lambdas, SQS, Kinesis Firehose, and AWS Glue to build an optimized serverless data lake which can be queried with Athena or visualized with Quicksight.
+Streams JSON data from any number of Reddit forums (subreddits) into an S3 data lake. Uses Lambdas, SQS, Kinesis Firehose, and AWS Glue to build an optimized serverless data lake which can be queried with Athena or visualized with Quicksight. 
 
 ## Description
 A scheduled Lambda sends subreddits to an SQS queue and assigns them to individual Lambdas which collect all available posts for that subreddit. The JSON data is streamed to an S3 bucket using Kinesis Firehose, crawled by a Glue Crawler, converted to Parquet by a Glue ETL Job, and re-crawled. 
 
 ![AWS Architecture](img/architecture.png)
+
+## Overview
+```
+.
+├── cfn                          # CloudFormation templates
+│   ├── data-lake.yml
+│   ├── master-stack.yml
+│   ├── pipeline.yml
+│   └── s3-cfn.yml
+├── config 
+│   └── load-subreddits.json     # List of subreddits
+├── glue-scripts
+│   └── json_to_parquet.py       # ETL script
+├── img
+│   └── architecture.png
+├── scripts 
+│   ├── delete_pipeline.sh       # Delete all data and resources
+│   ├── deploy.sh                # Deploy to AWS
+│   ├── set_env.sh               # API credentials go here
+│   └── set_parameters.sh
+├── src
+│   └── functions
+│       └── pipeline
+│           ├── handler.py       # Lambda functions
+│           ├── libs             # Libraries for Lambda
+│           │   ├── __init__.py
+│           │   ├── dict_smasher.py
+│           │   ├── sqs_utils.py
+│           │   └── utils.py
+│           ├── requirements.txt
+│           └── serverless.yml   # Serverless Framework
+├── .gitignore
+└── README.md
+```
 
 ## Getting Started
 
@@ -59,10 +93,15 @@ These instructions will deploy a stack named `prod-reddit-pipeline-1-us-east-1` 
    cd serverless-streaming-reddit-pipeline
    bash scripts/deploy.sh
    ```
-
-The script will prompt to update SSM Parameters and deploy Serverless Framework, respond with 'y' for the first deployment and 'n' for stack updates.
+The first deployment requires the SSM Parameters to be set. Serverless Framework deploys the Lambda functions:
+   ```
+   SSM Parameters must be set before the first deployment.
+   Update SSM parameters? y
+   Deploy Serverless Framework? y
+   ```
 
 ### Invoke Lambda
+Once the stacks have been created the pipeline is ready to be run:
    ```
    cd src/functions/pipeline
    serverless invoke --function queueSubreddits \
