@@ -38,7 +38,7 @@ provider:
   name: aws
   runtime: python3.7
   stackName: ${self:custom.cfn_stack}-${self:service.name}
-  stage: dev
+  stage: prod
   region: us-east-1
   deploymentBucket:
     tags:

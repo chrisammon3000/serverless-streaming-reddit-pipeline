@@ -3,10 +3,10 @@
 serverless-streaming-reddit-pipeline
 ==============================
 
-Streams JSON data from any number of Reddit forums (subreddits) into an S3 bucket and converts to Parquet. Uses Lambdas, SQS, Kinesis Firehose, and AWS Glue to build a serverless data lake which can be queried with Athena or Visualized with Quicksight.
+Streams JSON data from any number of Reddit forums (subreddits) into an S3 data lake. Uses Lambdas, SQS, Kinesis Firehose, and AWS Glue to build an optimized serverless data lake which can be queried with Athena or visualized with Quicksight.
 
 ## Description
-Subreddits are queued by a scheduled Lambda function and assigned to individual Lambda functions which collect all available posts for that subreddit. The JSON data is streamed to an S3 bucket using Kinesis Firehose, crawled by a Glue Crawler, converted to Parquet by a Glue ETL Job, and re-crawled. 
+A scheduled Lambda sends subreddits to an SQS queue and assigns them to individual Lambdas which collect all available posts for that subreddit. The JSON data is streamed to an S3 bucket using Kinesis Firehose, crawled by a Glue Crawler, converted to Parquet by a Glue ETL Job, and re-crawled. 
 
 ![AWS Architecture](img/architecture.png)
 
@@ -51,6 +51,8 @@ Subreddits are queued by a scheduled Lambda function and assigned to individual 
 
 ### Deploy AWS Infrastructure
 These instructions will deploy a stack named `prod-reddit-pipeline-1-us-east-1` using AWS CloudFormation.
+
+*Note:* The stage, app name and app version variables must coincide in `set_env.sh`, `master-stack.yml`, `s3-cfn.yml` and `serverless.yml`. 
 
    Run `scripts/deploy.sh` to deploy the stack:
    ```
