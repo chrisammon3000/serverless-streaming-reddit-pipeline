@@ -126,6 +126,9 @@ node_modules/
 # Scripts
 scripts/set_env.sh
 
+tree.txt
+*.drawio
+mocks/
 
 # cfn
 # cfn/events.yml
