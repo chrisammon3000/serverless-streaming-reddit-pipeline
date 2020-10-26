@@ -3,9 +3,12 @@
 serverless-streaming-reddit-pipeline
 ==============================
 
-Uses scheduled Lambdas, SQS and Kinesis Firehose to stream JSON data of new posts from any number of Reddit forums to an S3 data lake. A Glue Crawler determines the schema and makes the data available for query through Athena or for analytics with Quicksight. Can be run at any interval and scale for collecting data.
+Streams JSON data from any number of Reddit forums (subreddits) into an S3 bucket and converts to Parquet. Uses Lambdas, SQS, Kinesis Firehose, and AWS Glue to build a serverless data lake which can be queried with Athena or Visualized with Quicksight.
 
-This service employs a fan-out architecture where a cron scheduled Lambda function retrieves a list of subreddits (`config/load-subreddits.json`) from an S3 bucket, sends them to an SQS queue which triggers Lambda workers to process data collection from each subreddit in parallel. The worker then streams the data to a Kinesis Firehose stream into an S3 data lake. Allows for monitoring and collecting real-time data at scale without the hassle of provisioning servers.
+## Description
+Subreddits are queued by a scheduled Lambda function and assigned to individual Lambda functions which collect all available posts for that subreddit. The JSON data is streamed to an S3 bucket using Kinesis Firehose, crawled by a Glue Crawler, converted to Parquet by a Glue ETL Job, and re-crawled. 
+
+![AWS Architecture](img/architecture.png)
 
 ## Getting Started
 
@@ -39,11 +42,11 @@ This service employs a fan-out architecture where a cron scheduled Lambda functi
    STACK_NAME=$STAGE-$APP_NAME-$APP_VERSION-$REGION
 
    # Reddit API Params
-   CLIENT_ID=hYOoZaQK3ZsJqw
-   CLIENT_SECRET=WenXYVT8isAzRDxddc8_e_B38Tc
+   CLIENT_ID=<CLIENT_ID>
+   CLIENT_SECRET=<CLIENT_SECRET>
    USERAGENT=ssrp
-   USERNAME=abk7x4
-   PASSWORD=abkg2r0e2g0
+   USERNAME=<USERNAME>
+   PASSWORD=<PASSWORD>
    ```
 
 ### Deploy AWS Infrastructure
