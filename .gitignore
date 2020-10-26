@@ -122,13 +122,12 @@ data/
 package-lock.json
 node_modules/
 *.pem
-
-# Scripts
-scripts/set_env.sh
-
 tree.txt
 *.drawio
 mocks/
+
+# Scripts
+scripts/set_env.sh
 
 # cfn
 # cfn/events.yml
