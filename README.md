@@ -20,8 +20,8 @@ A scheduled Lambda sends subreddits to an SQS queue and assigns them to individu
 │   └── s3-cfn.yml
 ├── config 
 │   └── load-subreddits.json     # List of subreddits
-├── glue-scripts
-│   └── json_to_parquet.py       # ETL script
+├── glue-scripts                 # ETL scripts
+│   └── json_to_parquet.py       
 ├── img
 │   └── architecture.png
 ├── scripts 
@@ -38,7 +38,7 @@ A scheduled Lambda sends subreddits to an SQS queue and assigns them to individu
 │           │   ├── dict_smasher.py
 │           │   ├── sqs_utils.py
 │           │   └── utils.py
-│           ├── requirements.txt
+│           ├── requirements.txt # for serverless-python-requirements plugin
 │           └── serverless.yml   # Serverless Framework
 ├── .gitignore
 └── README.md
@@ -112,7 +112,15 @@ Once the stacks have been created the pipeline is ready to be run:
 
 Once `queueSubreddits` has run you can view the worker logs while they collect subreddit data in the CloudWatch log group for the `collectData` function.
 
+### Run Glue Workflow
+The default configuration is for the pipeline to run once per hour, and for the crawlers and ETL job to run once per day at midnight. To test the pipeline the workflow canbe invoked using AWS CLI:
+```
+invoke glue workflow
+```
+
 ### Querying in Athena
+Example queries:
+
 
 ### Cleaning up
    Run `scripts/delete_pipeline.sh` to delete the stack (WARNING: this will delete all the data!):
