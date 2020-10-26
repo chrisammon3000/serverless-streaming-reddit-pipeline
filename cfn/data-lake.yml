@@ -92,10 +92,11 @@ Resources:
           - Path: !Join ['', [s3://, !Ref DataBucketName, /data/raw_reddit_posts_json]]
       DatabaseName: !Ref RedditPipelineDatabase
       TablePrefix: !Join ['_', [!Ref Stage, 'ssrp', !Ref AppVersion, '']]
-      SchemaChangePolicy:
-        UpdateBehavior: "UPDATE_IN_DATABASE"
+      Configuration: "{\"Version\":1.0,\"CrawlerOutput\":{\"Partitions\":{\"AddOrUpdateBehavior\":\"InheritFromTable\"},\"Tables\":{\"AddOrUpdateBehavior\":\"MergeNewColumns\"}}}"
+      # SchemaChangePolicy:
+      #   UpdateBehavior: "UPDATE_IN_DATABASE"
       # Schedule:
-      #   ScheduleExpression: cron(0 3/12 * * ? *)
+      #   ScheduleExpression: cron(0 0/12 * * ? *)
   JSONToParquetETLJob:
     Type: AWS::Glue::Job
     Properties:
@@ -118,7 +119,7 @@ Resources:
           "--source_glue_table": !Join ['_', [!Ref Stage, 'ssrp', !Ref AppVersion, 'raw_reddit_posts_json']],
           "--job-bookmark-option": "job-bookmark-enable"
           # "--enable-spark-ui": "true",
-          # "--spark-event-logs-path": !Sub "s3://${LogBucketName}/glue-etl-jobs/"  <---- Need to create log bucket
+          # "--spark-event-logs-path": !Sub "s3://${LogBucketName}/glue-etl-jobs/"  <---- Requires log bucket
       }
       Description: "Convert raw JSON subreddit data to Parquet"
       WorkerType: Standard
@@ -143,8 +144,9 @@ Resources:
           - Path: !Join ['', [s3://, !Ref DataBucketName, /data/raw_reddit_posts_parquet]]
       DatabaseName: !Ref RedditPipelineDatabase
       TablePrefix: !Join ['_', [!Ref Stage, 'ssrp', !Ref AppVersion, '']]
-      SchemaChangePolicy:
-        UpdateBehavior: "UPDATE_IN_DATABASE"
+      Configuration: "{\"Version\":1.0,\"CrawlerOutput\":{\"Partitions\":{\"AddOrUpdateBehavior\":\"InheritFromTable\"},\"Tables\":{\"AddOrUpdateBehavior\":\"MergeNewColumns\"}}}"
+      # SchemaChangePolicy:
+      #   UpdateBehavior: "UPDATE_IN_DATABASE"
   SubredditJSONtoParquetWorkflow:
     Type: AWS::Glue::Workflow
     Properties: 
@@ -167,8 +169,9 @@ Resources:
           - !Ref AppVersion
           - !Ref AWS::Region
           - subreddits-raw-json-crawler-trigger
-      Description: Start crawler for raw JSON data
-      Type: ON_DEMAND
+      Description: Scheduled crawler for raw JSON data
+      Type: SCHEDULED
+      Schedule: cron(0 0/12 * * ? *)
       Actions:
         - CrawlerName: !Ref SubredditsRawJSONCrawler
   JSONToParquetETLJobTrigger:
