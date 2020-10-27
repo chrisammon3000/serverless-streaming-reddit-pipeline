@@ -13,12 +13,12 @@ A scheduled Lambda sends subreddits to an SQS queue and assigns them to individu
 ## Overview
 ```
 .
-├── cfn                          # CloudFormation templates
-│   ├── data-lake.yml
-│   ├── master-stack.yml
-│   ├── pipeline.yml
-│   └── s3-cfn.yml
-├── config 
+├── cfn                          # CloudFormation files
+│   ├── data-lake.yml            # Glue resources
+│   ├── master-stack.yml         # Master stack
+│   ├── pipeline.yml             # SQS & Kinesis Firehose
+│   └── s3-cfn.yml               # CloudFormation Templates for nested stacks
+├── config
 │   └── load-subreddits.json     # List of subreddits
 ├── glue-scripts                 # ETL scripts
 │   └── json_to_parquet.py       
@@ -33,7 +33,7 @@ A scheduled Lambda sends subreddits to an SQS queue and assigns them to individu
 │   └── functions
 │       └── pipeline
 │           ├── handler.py       # Lambda functions
-│           ├── libs             # Libraries for Lambda
+│           ├── libs             # Libraries for Lambda functions
 │           │   ├── __init__.py
 │           │   ├── dict_smasher.py
 │           │   ├── sqs_utils.py
@@ -113,14 +113,36 @@ Once the stacks have been created the pipeline is ready to be run:
 Once `queueSubreddits` has run you can view the worker logs while they collect subreddit data in the CloudWatch log group for the `collectData` function.
 
 ### Run Glue Workflow
-The default configuration is for the pipeline to run once per hour, and for the crawlers and ETL job to run once per day at midnight. To test the pipeline the workflow canbe invoked using AWS CLI:
+The default configuration is for the pipeline to run once per hour, and for the crawlers and ETL job to run once per day at midnight. To test the pipeline the workflow can be invoked using AWS CLI:
 ```
-invoke glue workflow
+aws glue start-workflow-run --name prod-reddit-pipeline-1-us-east-1-json-to-parquet-workflow
 ```
 
 ### Querying in Athena
-Example queries:
-
+Example queries for table named `prod_ssrp_1_raw_reddit_posts_parquet`:
+```
+-- Most popular posts by number of comments and upvote ratio
+SELECT MAX(upvote_ratio) AS upvote_ratio, MAX(num_comments) AS num_comments, title
+FROM prod_ssrp_1_raw_reddit_posts_parquet
+GROUP BY title
+ORDER BY num_comments DESC, upvote_ratio DESC
+LIMIT 100;
+```
+```
+-- Most popular authors
+SELECT DISTINCT author AS author, COUNT(DISTINCT title) as posts_count
+FROM prod_ssrp_1_raw_reddit_posts_parquet
+GROUP BY author
+ORDER BY posts_count DESC
+LIMIT 100;
+```
+```
+-- Longest posts
+SELECT DISTINCT title, LENGTH(selftext) AS post_length, clickable_url
+FROM prod_ssrp_1_raw_reddit_posts_parquet
+ORDER BY post_length DESC
+LIMIT 100;
+```
 
 ### Cleaning up
    Run `scripts/delete_pipeline.sh` to delete the stack (WARNING: this will delete all the data!):
