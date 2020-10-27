@@ -1,4 +1,9 @@
-
+[![Contributors][contributors-shield]][contributors-url]
+[![Forks][forks-shield]][forks-url]
+[![Stargazers][stars-shield]][stars-url]
+[![Issues][issues-shield]][issues-url]
+[![MIT License][license-shield]][license-url]
+[![LinkedIn][linkedin-shield]][linkedin-url]
 
 serverless-streaming-reddit-pipeline
 ==============================
@@ -119,7 +124,7 @@ aws glue start-workflow-run --name prod-reddit-pipeline-1-us-east-1-json-to-parq
 ```
 
 ### Querying in Athena
-Example queries for table named `prod_ssrp_1_raw_reddit_posts_parquet`:
+Example Athena queries:
 ```
 -- Most popular posts by number of comments and upvote ratio
 SELECT MAX(upvote_ratio) AS upvote_ratio, MAX(num_comments) AS num_comments, title
