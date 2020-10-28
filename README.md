@@ -108,7 +108,7 @@ The first deployment requires the SSM Parameters to be set. Serverless Framework
 ### Invoke Lambda
 Once the stacks have been created the pipeline is ready to be run:
    ```
-   cd src/functions/pipeline
+   cd src/functions/pipeline &&
    serverless invoke --function queueSubreddits \
    --stage prod \
    --region us-east-1 \
@@ -127,9 +127,9 @@ aws glue start-workflow-run --name prod-reddit-pipeline-1-us-east-1-json-to-parq
 Example Athena queries:
 ```
 -- Most popular posts by number of comments and upvote ratio
-SELECT MAX(upvote_ratio) AS upvote_ratio, MAX(num_comments) AS num_comments, title
+SELECT MAX(upvote_ratio) AS upvote_ratio, MAX(num_comments) AS num_comments, subreddit_name, author, title
 FROM prod_ssrp_1_raw_reddit_posts_parquet
-GROUP BY title
+GROUP BY subreddit_name, author, title
 ORDER BY num_comments DESC, upvote_ratio DESC
 LIMIT 100;
 ```
