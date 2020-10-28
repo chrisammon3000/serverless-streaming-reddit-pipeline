@@ -13,7 +13,7 @@ Streams JSON data from any number of Reddit forums (subreddits) into an S3 data 
 ## Description
 A scheduled Lambda sends subreddits to an SQS queue and assigns them to individual Lambdas which collect all available posts for that subreddit. The JSON data is streamed to an S3 bucket using Kinesis Firehose, crawled by a Glue Crawler, converted to Parquet by a Glue ETL Job, and re-crawled. 
 
-![AWS Architecture](img/architecture.png)
+![AWS Architecture](img/architecture-1.png)
 
 ## Overview
 ```
@@ -134,18 +134,22 @@ ORDER BY num_comments DESC, upvote_ratio DESC
 LIMIT 100;
 ```
 ```
--- Most popular authors
-SELECT DISTINCT author AS author, COUNT(DISTINCT title) as posts_count
+-- Most popular authors by subreddit
+SELECT DISTINCT author, subreddit_name, COUNT(DISTINCT title) AS num_posts
 FROM prod_ssrp_1_raw_reddit_posts_parquet
-GROUP BY author
-ORDER BY posts_count DESC
-LIMIT 100;
+GROUP BY author, subreddit_name
+ORDER BY num_posts DESC
 ```
 ```
--- Longest posts
-SELECT DISTINCT title, LENGTH(selftext) AS post_length, clickable_url
-FROM prod_ssrp_1_raw_reddit_posts_parquet
-ORDER BY post_length DESC
+-- Longest posts with highest engagement
+SELECT CAST(AVG(post_length) AS INTEGER) AS post_length, MAX(score) AS max_engagement, clickable_url, title
+FROM (
+  SELECT DISTINCT LENGTH(selftext) AS post_length, score, clickable_url, title
+  FROM dev_ssrp_1_raw_reddit_posts_parquet
+  ORDER BY post_length DESC
+) dev_ssrp_1_raw_reddit_posts_parquet
+GROUP BY title, clickable_url
+ORDER BY post_length DESC, max_engagement DESC
 LIMIT 100;
 ```
 
