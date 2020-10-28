@@ -145,9 +145,9 @@ ORDER BY num_posts DESC
 SELECT CAST(AVG(post_length) AS INTEGER) AS post_length, MAX(score) AS max_engagement, clickable_url, title
 FROM (
   SELECT DISTINCT LENGTH(selftext) AS post_length, score, clickable_url, title
-  FROM dev_ssrp_1_raw_reddit_posts_parquet
+  FROM prod_ssrp_1_raw_reddit_posts_parquet
   ORDER BY post_length DESC
-) dev_ssrp_1_raw_reddit_posts_parquet
+) prod_ssrp_1_raw_reddit_posts_parquet
 GROUP BY title, clickable_url
 ORDER BY post_length DESC, max_engagement DESC
 LIMIT 100;
