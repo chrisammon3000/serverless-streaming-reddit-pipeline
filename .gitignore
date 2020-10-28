@@ -128,7 +128,7 @@ mocks/
 
 # Scripts
 scripts/set_env_*.sh
-scripts/set_env.sh
+# scripts/set_env.sh
 # cfn
 # cfn/events.yml
 # cfn/core.yml
