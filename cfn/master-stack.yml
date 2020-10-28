@@ -11,7 +11,7 @@ Description: Reddit data mining service
 Parameters:
   Stage:
     Type: String
-    Default: prod
+    Default: dev
     AllowedValues:
       - dev
       - prod
