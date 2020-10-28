@@ -128,6 +128,7 @@ mocks/
 
 # Scripts
 scripts/set_env.sh
+scripts/set_env_old.sh
 
 # cfn
 # cfn/events.yml
