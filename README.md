@@ -160,7 +160,7 @@ LIMIT 100;
    bash scripts/delete_pipeline.sh
    ```
    
-## Contributors
+## Author
 
 **Primary (Contact) : [Gregory Lindsey](https://github.com/abk7777)**
 
