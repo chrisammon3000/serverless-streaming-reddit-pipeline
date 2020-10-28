@@ -1,11 +1,3 @@
-# # Sync to cfn bucket
-# aws s3 cp ./cfn s3://vid-masher-cfn-templates-us-east-1-531868584498/reddit-pipeline/dev/version_2/ --recursive
-# # Deploy
-# aws --region us-east-1 cloudformation deploy \
-# --template-file cfn/master.yml \
-# --stack-name dev-reddit-pipeline-2-us-east-1 \
-# --capabilities CAPABILITY_NAMED_IAM
-
 AWSTemplateFormatVersion: '2010-09-09'
 Description: Reddit data mining service
 Parameters:
