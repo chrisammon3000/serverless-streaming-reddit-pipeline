@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+STAGE=prod
+APP_NAME=reddit-pipeline
+APP_VERSION=1
+REGION=us-east-1
+ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+STACK_NAME=$STAGE-$APP_NAME-$APP_VERSION-$REGION
+
+# Reddit API Params
+CLIENT_ID=<CLIENT_ID>
+CLIENT_SECRET=<USERAGENT>
+USERAGENT=ssrp
+USERNAME=<USERNAME>
+PASSWORD=<PASSWORD>
+
+SSM_KEY=$STAGE-$APP_NAME/$APP_VERSION/$REGION
+
