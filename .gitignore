@@ -127,8 +127,7 @@ tree.txt
 mocks/
 
 # Scripts
-scripts/set_env.sh
-scripts/set_env_old.sh
+scripts/set_env*.sh
 
 # cfn
 # cfn/events.yml
