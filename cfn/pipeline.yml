@@ -17,6 +17,7 @@ Resources:
           - !Ref AppName
           - !Ref AppVersion
           - !Ref AWS::Region
+          - !Ref AWS::AccountId
           - 'data'
   ConfigBucket:
     Type: AWS::S3::Bucket
@@ -27,6 +28,7 @@ Resources:
           - !Ref AppName
           - !Ref AppVersion
           - !Ref AWS::Region
+          - !Ref AWS::AccountId
           - 'config'
   ConfigBucketPolicy: 
     Type: AWS::S3::BucketPolicy
@@ -56,6 +58,7 @@ Resources:
           - !Ref AppName
           - !Ref AppVersion
           - !Ref AWS::Region
+          - !Ref AWS::AccountId
           - 'glue-scripts'
   KinesisFirehoseDeliveryStream:
     Type: AWS::KinesisFirehose::DeliveryStream
