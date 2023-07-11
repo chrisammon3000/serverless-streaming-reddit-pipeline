@@ -8,6 +8,8 @@
 serverless-streaming-reddit-pipeline
 ==============================
 
+***Update 7/11/23:** Due to the recent Reddit API changes this application will no longer collect data, but it serves as an example of how to implement a fan-out architecture pattern.*
+
 Streams JSON data from any number of Reddit forums (subreddits) into an S3 data lake. Uses Lambdas, SQS, Kinesis Firehose, and AWS Glue to build an optimized serverless data lake which can be queried with Athena or visualized with Quicksight. 
 
 ## Description
